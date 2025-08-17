@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::factory(50)->create(); // 50 usuários
+        \App\Models\User::factory(500)->create(); // 50 usuários
 
         $this->call([
             CategorySeeder::class,

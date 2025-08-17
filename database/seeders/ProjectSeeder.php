@@ -16,19 +16,17 @@ class ProjectSeeder extends Seeder
 
         if ($clients->isEmpty()) {
             // Cria clientes se ainda não existirem
-            \App\Models\User::factory(10)->client()->create();
+            \App\Models\User::factory(500)->client()->create();
             $clients = User::where('type', 'client')->get();
         }
 
-        foreach (range(1, 30) as $i) {
+        foreach (range(1, 1000) as $i) {
             $project = Project::factory()->make();
             $project->client_id = $clients->random()->id;
             $project->save();
 
             $categories = Category::inRandomOrder()->take(rand(1, 3))->pluck('id');
             $project->categories()->attach($categories);
-
-
         }
     }
 }
