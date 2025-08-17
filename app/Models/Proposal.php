@@ -33,4 +33,9 @@ class Proposal extends Model
     public function payment() {
         return $this->hasOne(Payment::class);
     }
+
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'related');
+    }
 }

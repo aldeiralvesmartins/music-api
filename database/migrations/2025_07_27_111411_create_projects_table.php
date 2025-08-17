@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description');
             $table->decimal('budget', 10, 2);
             $table->date('deadline');
-            $table->enum('status', ['open', 'in_progress', 'completed', 'cancelled'])->default('open');
+            $table->string('status')->default('open'); //['open', 'in_progress', 'waiting_payment', 'completed', 'cancelled', 'blocked']
             $table->timestamps();
         });
     }

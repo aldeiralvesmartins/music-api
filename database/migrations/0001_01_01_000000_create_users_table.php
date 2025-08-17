@@ -16,11 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('type', ['client', 'freelancer']);
+            $table->string('type'); //['client', 'freelancer']
             $table->text('bio')->nullable();
             $table->json('portfolio')->nullable(); // array de links
             $table->string('photo')->nullable();
+            $table->string('customer_id')->nullable()->after('id');
             $table->timestamp('email_verified_at')->nullable()->after('email');
+            $table->string('taxpayer')->unique()->nullable();
             $table->rememberToken()->after('password');
             $table->timestamps();
         });

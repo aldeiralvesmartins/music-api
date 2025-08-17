@@ -19,15 +19,12 @@ class ProjectFactory extends Factory
             'Sistema de RH com Controle de Ponto',
         ];
 
-        $status = ['open', 'in_progress', 'completed'];
-
-
         return [
             'title' => $this->faker->randomElement($titulos),
             'description' => $this->generateProjectDescription(),
             'budget' => $this->faker->numberBetween(3000, 50000),
             'deadline' => $this->faker->dateTimeBetween('+10 days', '+4 months'),
-            'status' => $this->faker->randomElement($status),
+            'status' => 'open',
         ];
     }
 

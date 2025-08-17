@@ -45,7 +45,8 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
 
-        $projects = Project::with(['categories', 'client', 'proposals.freelancer'])
+        // Carrega projetos com categorias, cliente, propostas, freelancer e transações
+        $projects = Project::with(['categories', 'client', 'proposals.freelancer', 'proposals.transactions'])
             ->where('client_id', $user->id)
             ->latest()
             ->get();
@@ -58,10 +59,17 @@ class ProjectController extends Controller
                 'avatar' => $user->photo,
                 'rating' => $user->rating ?? null,
             ];
+
+            // Aqui traz a primeira transação encontrada entre todas as propostas
+            $project->transaction = $project->proposals
+                ->pluck('transactions')      // pega as transações de cada proposta
+                ->flatten()                  // transforma em uma única coleção
+                ->first();                   // pega a primeira transação, se houver
         });
 
         return response()->json($projects);
     }
+
 
     public function getProjectsInProgress()
     {

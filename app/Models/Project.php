@@ -32,4 +32,9 @@ class Project extends Model
     public function proposals() {
         return $this->hasMany(Proposal::class);
     }
+
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'related');
+    }
 }

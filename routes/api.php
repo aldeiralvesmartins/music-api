@@ -59,5 +59,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/payments/{id}/release', [PaymentController::class, 'release']);
     Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
     Route::post('/proposals/{proposal}/reject', [ProposalController::class, 'reject']);
-    Route::post('/proposals/deposit', [PaymentController::class, 'depositAndLock']);
+    Route::post('/proposals/depositAndLock', [PaymentController::class, 'depositAndLock']);
+    Route::post('/proposals/deposit', [PaymentController::class, 'deposit']);
 });

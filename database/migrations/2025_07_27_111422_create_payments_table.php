@@ -19,7 +19,7 @@ return new class extends Migration
 
             $table->decimal('amount', 10, 2);
             $table->decimal('fee', 10, 2)->default(0);
-            $table->enum('status', ['pending', 'held', 'released', 'refunded'])->default('pending'); // tipo escrow
+            $table->string('status')->default('pending'); // tipo escrow ['pending', 'held', 'released', 'refunded']
             $table->timestamps();
         });
 

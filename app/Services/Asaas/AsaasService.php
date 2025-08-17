@@ -8,12 +8,16 @@ use App\Models\OccurrenceMovement;
 use App\Models\Dojo;
 use App\Models\FinancialMovement;
 use App\Models\Student;
+use App\Models\User;
+use Carbon\Carbon;
 use DateTime;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
+use function Psy\debug;
 
 /**
  * Serviço de integração com a API do Asaas para geração de boletos.
@@ -38,21 +42,41 @@ class AsaasService
 
     /**
      * Criar Cobranca.
-     * @return string|true
+     * @return string|array
      * @throws GuzzleException
      * @throws Exception
      */
-    public function criarCobranca($dados): bool|string
+    public function criarCobranca($dados): array|string
     {
         try {
             $response = $this->client->post($this->url['criarCobranca'],
-                ['headers' => $this->prepareHeadersCliente($dados['api_key']), 'json' => $this->prepararDadosParaGerarCobranca($dados)]);
-            $retorno = json_decode($response->getBody()->getContents(), true);
-            $retorno['financial_movement_id'] = $dados['id'];
-            return $this->trataRetornoCobranca($retorno);
-        } catch (RequestException $e) {
-            return false;
+                ['headers' => $this->prepareHeaders(), 'json' => $this->prepararDadosParaGerarCobranca($dados)]);
+           return json_decode($response->getBody()->getContents(), true);
+        } catch (\Throwable $e) {
+            $message = $e->getMessage();
+
+            if (method_exists($e, 'getResponse') && $e->getResponse()) {
+                $body = (string) $e->getResponse()->getBody();
+
+                if ($this->isJson($body)) {
+                    $errorData = json_decode($body, true);
+                    if (!empty($errorData['error'])) {
+                        $message = $errorData['error'];
+                    } elseif (!empty($errorData['errors'][0]['description'])) {
+                        $message = $errorData['errors'][0]['description'];
+                    }
+                } else {
+                    $message = trim($body);
+                }
+            }
+
+            throw new \Exception($message); // Joga para cima
         }
+    }
+    private function isJson($string)
+    {
+        json_decode($string);
+        return (json_last_error() === JSON_ERROR_NONE);
     }
 
     /**
@@ -91,13 +115,30 @@ class AsaasService
     {
         try {
             $response = $this->client->post($this->url['criarCliente'],
-                ['headers' => $this->prepareHeadersCliente($dados['api_key']), 'json' => $this->prepararDadosParaGerarCliente($dados)]);
+                ['headers' => $this->prepareHeaders(), 'json' => $this->prepararDadosParaGerarCliente($dados)]);
             $retorno = json_decode($response->getBody()->getContents(), true);
             if (!empty($retorno['id']))
                 $this->CriaVinculoCliente($dados, $retorno['id']);
             return $retorno['id'];
         } catch (RequestException $e) {
-            return false;
+            $message = $e->getMessage();
+
+            if (method_exists($e, 'getResponse') && $e->getResponse()) {
+                $body = (string) $e->getResponse()->getBody();
+
+                if ($this->isJson($body)) {
+                    $errorData = json_decode($body, true);
+                    if (!empty($errorData['error'])) {
+                        $message = $errorData['error'];
+                    } elseif (!empty($errorData['errors'][0]['description'])) {
+                        $message = $errorData['errors'][0]['description'];
+                    }
+                } else {
+                    $message = trim($body);
+                }
+            }
+
+            throw new \Exception($message); // Joga para cima
         }
     }
 
@@ -205,22 +246,20 @@ class AsaasService
      */
     private function prepararDadosParaGerarCobranca($dados): array
     {
-        $customerId = $this->getCustomerId($dados['saleable_id']);
+        $customerId = $this->getCustomerId($dados['client']['id']);
+
         if (!$customerId) {
             $customerId = $this->criarCliente($dados);
         }
-        $mensagem = "Parcela {$dados['number']} Valor R$ " . number_format($dados['amount'], 2, ',', '.') . " ";
-        $mensagem .= "Entrada " . ($dados['entrance'] ? 'Sim' : 'Não') . " ";
-        $mensagem .= "Vencimento " . date('d/m/Y', strtotime($dados['expiration_date']));
 
         return array_merge([
-            'customer' => $customerId,
-            'billingType' => 'BOLETO',
-            'dueDate' => $dados['expiration_date'],
-            'value' => $dados['amount'],
-            'description' => $mensagem ?? null,
-            'externalReference' => $dados['id'],
-            'postalService' => false
+            'customer'          => $customerId,
+            'billingType'   => $this->getBillingType($dados['methodId']),
+            'dueDate'           => Carbon::now()->addDays(5)->toDateString(),
+            'value'             => $dados['amount'],
+            'description'       => $dados['description'] ?? null,
+            'externalReference' => $dados['related_id'],
+            'postalService'     => false
         ], $this->regrasDeDescontoMultaJurosSplitParaPagamento($dados));
     }
 
@@ -231,22 +270,22 @@ class AsaasService
      */
     private function prepararDadosParaGerarCliente($dados): array
     {
-        $cliente = Student::with('address')->find($dados['saleable_id']);
+        $cliente = User::find($dados['client']['id']);
         $documentoPagador = $this->removerCaracteresNaoNumericos($cliente->taxpayer);
-        $cep = $this->removerCaracteresNaoNumericos($cliente->address->zip_code);
-        $bairro = $this->removerAcentos($cliente->address->neighborhood);
-        $addressNumber = $this->removerAcentos($cliente->address->number);
-        $complement = $this->removerAcentos($cliente->address->complement);
-        $address = $this->removerAcentos($cliente->address->street);
+//        $cep = $this->removerCaracteresNaoNumericos($cliente->address->zip_code);
+//        $bairro = $this->removerAcentos($cliente->address->neighborhood);
+//        $addressNumber = $this->removerAcentos($cliente->address->number);
+//        $complement = $this->removerAcentos($cliente->address->complement);
+//        $address = $this->removerAcentos($cliente->address->street);
         return [
             'name' => $cliente->name,
-            'email' => 'jarlindopereira@gmail.com',
+            'email' => $cliente->email,
             'cpfCnpj' => $documentoPagador,
-            'postalCode' => $cep,
-            'address' => $address,
-            'addressNumber' => $addressNumber,
-            'complement' => $complement,
-            'province' => $bairro,
+//            'postalCode' => $cep,
+//            'address' => $address,
+//            'addressNumber' => $addressNumber,
+//            'complement' => $complement,
+//            'province' => $bairro,
             'externalReference' => $documentoPagador,
             'notificationDisabled' => true
         ];
@@ -356,23 +395,24 @@ class AsaasService
      */
     private function CriaVinculoCliente($dados, $customerId): void
     {
-        $responsavel = Student::find($dados['saleable_id']);
+        $responsavel = User::find($dados['client']['id']);
         if ($responsavel) {
             $responsavel->customer_id = $customerId;
             $responsavel->save();
         } else {
-            Log::warning("Aluno com ID {$dados['saleable_id']} não encontrado.");
+            Log::warning("Aluno com ID {$dados['client']['id']} não encontrado.");
         }
     }
 
     /**
-     * @param $saleableId
-     * @return bool|string
+     * Obtém o customer_id de um usuário pelo ID.
+     *
+     * @param  int|string  $saleableId
+     * @return string|false
      */
-    private function getCustomerId($saleableId): bool|string
+    private function getCustomerId(int|string $saleableId): string|false
     {
-        $cliente = Student::find($saleableId);
-        return $cliente['customer_id'] ?? false;
+        return User::whereKey($saleableId)->value('customer_id') ?: false;
     }
 
     /**
@@ -411,6 +451,12 @@ class AsaasService
                 'value' => $dados['mora_dia_em_percentual']
             ];
         }
+
+        if (!empty($dados['installments'])) {
+            $dadosCobranca['installmentCount']  = $dados['installments'];
+            $dadosCobranca['totalValue']  = $dados['amount'];
+        }
+
         return $dadosCobranca;
     }
 
@@ -471,4 +517,15 @@ class AsaasService
             'ç' => 'c', 'Ç' => 'C'
         ]);
     }
+
+    private function getBillingType(int|string $methodId): string
+    {
+        return match ($methodId) {
+            2 => 'BOLETO',
+            3 => 'CREDIT_CARD',
+            1 => 'PIX',
+            default => throw new InvalidArgumentException("Método de pagamento inválido: {$methodId}"),
+        };
+    }
+
 }

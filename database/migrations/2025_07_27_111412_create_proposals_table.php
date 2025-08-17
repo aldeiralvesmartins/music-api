@@ -26,10 +26,17 @@ return new class extends Migration
             $table->integer('duration'); // dias estimados
             $table->text('message')->nullable();
             $table->json('links')->nullable(); // links extras
-            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
+            $table->string('status')->default('pending');//['pending', 'waiting_payment',  'accepted', 'rejected']
 
             $table->decimal('deposit_amount', 10, 2)->default(0)->after('amount');
-            $table->enum('deposit_status', ['pending', 'paid', 'released', 'cancelled'])->default('pending')->after('deposit_amount');
+            $table->string('deposit_status')->default('pending')->after('deposit_amount');
+//            [
+//                'pending',         // proposta criada, ainda sem pedido de depósito
+//                'waiting_payment', // depósito solicitado mas ainda não pago
+//                'paid',            // depósito pago
+//                'released',        // depósito liberado para o freelancer
+//                'cancelled'        // cancelado
+//            ]
             $table->timestamps();
         });
 

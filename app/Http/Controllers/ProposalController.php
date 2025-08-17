@@ -73,6 +73,7 @@ class ProposalController extends Controller
 
     public function show(Proposal $proposal)
     {
+        $proposal->load('transactions');
         return $proposal;
     }
 
@@ -140,7 +141,7 @@ class ProposalController extends Controller
 
         // Atualiza a proposta para 'rejected'
         $proposal->update(['status' => 'rejected']);
-
+        $proposal->project->update(['status' => 'in_progress']);
         return response()->json([
             'message' => 'Proposta rejeitada com sucesso.',
             'proposal' => $proposal->fresh()
