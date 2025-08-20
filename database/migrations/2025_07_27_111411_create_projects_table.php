@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('budget', 10, 2);
             $table->date('deadline');
             $table->string('status')->default('open'); //['open', 'in_progress', 'waiting_payment', 'completed', 'cancelled', 'blocked']
+            $table->string('next_status')->default('OPEN'); //['PROPOSAL_ACCEPTED', 'WORK_STARTED', 'IN_PROGRESS','REVIEW', 'FINALIZED']
             $table->timestamps();
         });
     }

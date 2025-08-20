@@ -14,7 +14,7 @@ class Project extends Model
     public $incrementing = false; // porque o id é string
 
     protected $keyType = 'string';
-    protected $fillable = ['id', 'client_id', 'title', 'description', 'budget', 'deadline', 'status'];
+    protected $fillable = ['id', 'client_id', 'title', 'description', 'budget', 'deadline', 'status','next_status'];
     public static function boot()
     {
         parent::boot();

@@ -163,4 +163,24 @@ class ProjectController extends Controller
         $project->delete();
         return response()->noContent();
     }
+
+    public function updateNextStatus(Request $request, $id)
+    {
+        $request->validate([
+            'next_status' => 'required|string|in:PROPOSAL_ACCEPTED,WORK_STARTED,IN_PROGRESS,REVIEW,FINALIZED',
+        ]);
+
+        $project = Project::findOrFail($id);
+
+        $project->next_status = $request->next_status;
+        if ($request->next_status === 'FINALIZED') {
+            $project->status = 'finished';
+        }
+        $project->save();
+
+        return response()->json([
+            'message' => 'Next status atualizado com sucesso!',
+            'project' => $project,
+        ]);
+    }
 }

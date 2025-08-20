@@ -33,7 +33,7 @@ class ProjectFactory extends Factory
             'description' => $this->generateProjectDescription(),
             'budget' => $this->faker->numberBetween(3000, 50000),
             'deadline' => $this->faker->dateTimeBetween('+10 days', '+6 months'),
-            'status' => $this->faker->randomElement(['open', 'in_progress', 'completed']),
+            'status' => 'open',
         ];
     }
 

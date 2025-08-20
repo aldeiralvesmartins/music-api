@@ -38,13 +38,13 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) 
     return redirect(config('app.frontend_url') . '/login?verified=success');
 })->name('verification.verify')->middleware('signed');
 
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/projects/byClient', [ProjectController::class, 'getProjectsbyClient']);
     Route::get('/projects/inProgress', [ProjectController::class, 'getProjectsInProgress']);
+    Route::put('/projects/{id}/next-status', [ProjectController::class, 'updateNextStatus']); // atualizar status
     Route::get('/proposals/allProposal', [ProposalController::class, 'allProposal']);
     Route::apiResource('projects', ProjectController::class);
     Route::apiResource('proposals', ProposalController::class);
@@ -62,3 +62,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/proposals/depositAndLock', [PaymentController::class, 'depositAndLock']);
     Route::post('/proposals/deposit', [PaymentController::class, 'deposit']);
 });
+
