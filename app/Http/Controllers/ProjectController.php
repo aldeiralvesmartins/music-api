@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Proposal;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use function Psy\debug;
 
 class ProjectController extends Controller
 {
@@ -171,11 +176,83 @@ class ProjectController extends Controller
         ]);
 
         $project = Project::findOrFail($id);
+        $user = Auth::user();
 
-        $project->next_status = $request->next_status;
-        if ($request->next_status === 'FINALIZED') {
-            $project->status = 'finished';
+        // Define a ordem dos steps
+        $stepsOrder = [
+            'PROPOSAL_ACCEPTED' => 1,
+            'WORK_STARTED' => 2,
+            'IN_PROGRESS' => 3,
+            'REVIEW' => 4,
+            'FINALIZED' => 5,
+        ];
+
+        $currentStepOrder = $stepsOrder[$project->next_status];
+        $nextStepOrder = $stepsOrder[$request->next_status];
+
+        // Verifica se está tentando avançar no mesmo ou retroceder
+        if ($nextStepOrder <= $currentStepOrder) {
+            return response()->json([
+                'message' => 'Não é permitido selecionar o mesmo step ou um anterior.',
+            ], 422);
         }
+
+        // Atualiza o próximo status
+        $project->next_status = $request->next_status;
+
+        // Se o usuário for cliente e marcar FINALIZED, altera status geral
+        if ($user->type === 'client' && $request->next_status === 'FINALIZED') {
+            try {
+                $project->status = 'finished';
+
+                // Pega a proposal aprovada
+                $proposal = $project->proposals()->where('status', 'accepted')->first();
+
+                if (!$proposal) {
+                    return response()->json([
+                        'message' => 'Nenhuma proposta aprovada encontrada para este projeto.'
+                    ], 404);
+                }
+
+                // Pega o freelancer associado
+                $freelancer = User::with('wallet')->find($proposal->freelancer_id);
+
+                if (!$freelancer) {
+                    return response()->json([
+                        'message' => 'Freelancer não encontrado para a proposta aprovada.'
+                    ], 404);
+                }
+
+                if (!$freelancer->wallet) {
+                    return response()->json([
+                        'message' => 'Freelancer não possui carteira cadastrada.'
+                    ], 422);
+                }
+
+                // Cria a transação
+                Transaction::create([
+                    'amount'       => $proposal->amount,
+                    'wallet_id'    => $freelancer->wallet->id,
+                    'type'         => 'release',
+                    'status'       => 'released',
+                    'related_id'   => $proposal->id,
+                    'related_type' => Proposal::class,
+                ]);
+            } catch (\Exception $e) {
+                dd($e->getMessage());
+                // Loga o erro para debugging
+                Log::error('Erro ao finalizar projeto e criar transação: '.$e->getMessage(), [
+                    'project_id' => $project->id,
+                    'user_id' => $user->id,
+                ]);
+
+                return response()->json([
+                    'message' => 'Ocorreu um erro ao processar a finalização do projeto.'
+                ], 500);
+            }
+        }
+
+
         $project->save();
 
         return response()->json([
