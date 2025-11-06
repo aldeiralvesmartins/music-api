@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'correios' => [
+        'username' => env('CORREIOS_USERNAME'),
+        'password' => env('CORREIOS_PASSWORD'),
+        'postcard' => env('CORREIOS_POSTCARD'),
+    ],
+
+    'melhor_envio' => [
+        'token' => env('MELHOR_ENVIO_TOKEN'),
+        'user_agent' => env('MELHOR_ENVIO_USER_AGENT', 'e-co/1.0'),
+        'sandbox' => env('MELHOR_ENVIO_SANDBOX', true),
+    ],
+
 ];

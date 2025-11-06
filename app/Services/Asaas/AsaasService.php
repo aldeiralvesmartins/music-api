@@ -197,23 +197,23 @@ class AsaasService
      */
     private function prepararDadosParaGerarSubConta(): array
     {
-        $dojo = Dojo::with('address')->find(auth()->user()->dojo_id);
-        $phoneNumber = optional($dojo->phones->first())->number ?? '';
-        $cpfCnpj = $this->removerCaracteresNaoNumericos($dojo['taxpayer']);
-        $cep = $this->removerCaracteresNaoNumericos($dojo->address->zip_code);
+        $user = User::with('address')->find(auth()->user()->id);
+        $phoneNumber = optional($user->phones->first())->number ?? '';
+        $cpfCnpj = $this->removerCaracteresNaoNumericos($user['taxpayer']);
+        $cep = $this->removerCaracteresNaoNumericos($user->address->zip_code);
         $numeroTelefone = $this->removerCaracteresNaoNumericos($phoneNumber);
-        $bairro = $this->removerAcentos($dojo->address->neighborhood);
-        $addressNumber = $this->removerAcentos($dojo->address->number);
-        $complement = $this->removerAcentos($dojo->address->complement ?? '');
-        $address = $this->removerAcentos($dojo->address->street);
+        $bairro = $this->removerAcentos($user->address->neighborhood);
+        $addressNumber = $this->removerAcentos($user->address->number);
+        $complement = $this->removerAcentos($user->address->complement ?? '');
+        $address = $this->removerAcentos($user->address->street);
         $valor = 15000;
         $companyType = 'LIMITED';
         $url = getenv('URL_WEBHOOK');
         return [
-            'name' => $dojo['name'],
-            'email' => $dojo['email'],
+            'name' => $user['name'],
+            'email' => $user['email'],
             'cpfCnpj' => $cpfCnpj,
-            'birthDate' => date('Y-m-d', strtotime($dojo->foundation_date)) ?? null,
+            'birthDate' => date('Y-m-d', strtotime($user->foundation_date)) ?? null,
             'companyType' => $companyType,
             'phone' => $numeroTelefone,
             'mobilePhone' => $numeroTelefone,
@@ -225,7 +225,7 @@ class AsaasService
             'incomeValue' => $valor,
             'webhooks' => [
                 [
-                    'name' => "Webhook para {$dojo['name']}",
+                    'name' => "Webhook para {$user['name']}",
                     'url' => $url,
                     'email' => 'suporte@cenfit.com.br',
                     'sendType' => 'SEQUENTIALLY',

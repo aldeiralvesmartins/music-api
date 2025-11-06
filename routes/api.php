@@ -1,65 +1,120 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\MessageController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\ProposalController;
-use App\Http\Controllers\RatingController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\WalletController;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\URL;
+use App\Http\Controllers\{Admin\LayoutSectionController,
+    AuthController,
+    ProductController,
+    CategoryController,
+    OrderController,
+    PaymentController,
+    CartController,
+    AddressController,
+    UserController,
+    ShippingController,
+    UserIntegrationController};
+use App\Http\Controllers\Admin\AdminController;
 
+// Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) {
-    $user = User::findOrFail($id);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-    if (! URL::hasValidSignature($request)) {
-        return redirect(config('app.frontend_url') . '/login?verified=invalid');
-    }
+// Product routes (public)
+Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+Route::get('categories/{category}/products', [ProductController::class, 'getByCategory']);
 
-    if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-        return redirect(config('app.frontend_url') . '/login?verified=invalid');
-    }
+// Category routes (public)
+Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 
-    if ($user->hasVerifiedEmail()) {
-        return redirect(config('app.frontend_url') . '/login?verified=already');
-    }
+// Package tracking (public)
+Route::post('/rastreio', [\App\Http\Controllers\RastreamentoController::class, 'rastrear'])->name('rastreio.consultar');
+Route::prefix('layout')->group(function () {
+    Route::get('/', [LayoutSectionController::class, 'index']);
 
-    $user->markEmailAsVerified();
-    $user->save();
-
-    return redirect(config('app.frontend_url') . '/login?verified=success');
-})->name('verification.verify')->middleware('signed');
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/projects/byClient', [ProjectController::class, 'getProjectsbyClient']);
-    Route::get('/projects/inProgress', [ProjectController::class, 'getProjectsInProgress']);
-    Route::put('/projects/{id}/next-status', [ProjectController::class, 'updateNextStatus']); // atualizar status
-    Route::get('/proposals/allProposal', [ProposalController::class, 'allProposal']);
-    Route::apiResource('projects', ProjectController::class);
-    Route::apiResource('proposals', ProposalController::class);
-    Route::apiResource('messages', MessageController::class);
-    Route::apiResource('ratings', RatingController::class);
-    Route::apiResource('notifications', NotificationController::class);
-    Route::apiResource('payments', PaymentController::class);
-    Route::apiResource('wallets', WalletController::class);
-    Route::get('/wallet', [WalletController::class, 'me']);
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::post('/projects/{project}/proposals', [ProposalController::class, 'store']);
-    Route::post('/payments/{id}/release', [PaymentController::class, 'release']);
-    Route::post('/proposals/{proposal}/accept', [ProposalController::class, 'accept']);
-    Route::post('/proposals/{proposal}/reject', [ProposalController::class, 'reject']);
-    Route::post('/proposals/depositAndLock', [PaymentController::class, 'depositAndLock']);
-    Route::post('/proposals/deposit', [PaymentController::class, 'deposit']);
 });
+// Protected routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
+    // Shipping calculation (requires authentication to get user address)
+    Route::post('/frete/calcular', [ShippingController::class, 'calcularFrete'])->name('frete.calcular');
+    // Auth routes
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/me', [AuthController::class, 'user']); // Alias for /user to match frontend
+    Route::put('/profile', [UserController::class, 'updateProfile']);
+    Route::put('/change-password', [UserController::class, 'changePassword']);
 
+
+
+    // Order routes
+    Route::apiResource('orders', OrderController::class);
+
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']);
+    Route::post('orders/{order}/retry-payment', [OrderController::class, 'retryPayment']);
+
+    // Payment routes
+    Route::apiResource('payments', PaymentController::class);
+    Route::post('payments/webhook', [PaymentController::class, 'webhook']);
+
+    // Cart routes
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('/add', [CartController::class, 'add']);
+        Route::put('/update/{cartItem}', [CartController::class, 'update']);
+        Route::delete('/remove/{cartItem}', [CartController::class, 'remove']);
+        Route::delete('/clear', [CartController::class, 'clear']);
+    });
+
+    // Address routes
+    Route::apiResource('addresses', AddressController::class);
+    Route::put('addresses/{address}/set-default', [AddressController::class, 'setAsDefault']);
+
+        // User profile routes
+    Route::prefix('user')->group(function () {
+        Route::get('/orders', [UserController::class, 'orders']);
+        Route::get('/orders/{order}', [UserController::class, 'orderDetail']);
+        Route::get('/integrations', [UserIntegrationController::class, 'index']);
+        Route::get('/integrations/available-providers', [UserIntegrationController::class, 'availableProviders']);
+        Route::post('/integrations', [UserIntegrationController::class, 'store']);
+        Route::put('/integrations/{id}', [UserIntegrationController::class, 'update']);
+        Route::patch('/integrations/{id}/toggle', [UserIntegrationController::class, 'toggle']);
+        Route::patch('/integrations/{id}/set-default', [UserIntegrationController::class, 'setDefault']); // ← NOVA ROTA
+        Route::delete('/integrations/{id}', [UserIntegrationController::class, 'destroy']);
+    });
+
+    // Admin routes
+    Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+
+        // User management
+        Route::get('/users', [AdminController::class, 'listUsers']);
+        Route::put('/users/{id}', [AdminController::class, 'updateUser']);
+        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+
+        // Product management
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{product}', [ProductController::class, 'update']);
+        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+
+        // Order management
+        Route::get('/orders', [AdminController::class, 'listOrders']);
+        Route::get('/orders/{order}', [OrderController::class, 'show']);
+        Route::put('/orders/{order}', [AdminController::class, 'updateOrder']);
+
+        // Category management
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{category}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+        Route::prefix('layout')->group(function () {
+            Route::get('/', [LayoutSectionController::class, 'index']);
+            Route::post('/', [LayoutSectionController::class, 'store']);
+            Route::put('/{layoutSection}', [LayoutSectionController::class, 'update']);
+            Route::delete('/{layoutSection}', [LayoutSectionController::class, 'destroy']);
+        });
+
+    });
+    Route::apiResource('cart', CartController::class);
+    Route::apiResource('addresses', AddressController::class);
+});

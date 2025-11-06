@@ -2,34 +2,68 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Notifications\VerifyEmailCustom;
 use App\Services\CustomIdService;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens,HasFactory, Notifiable;
     protected $primaryKey = 'id';
 
     public $incrementing = false; // porque o id é string
 
     protected $keyType = 'string';
+
+    /**
+     * Get the addresses for the user.
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Get the default address for the user.
+     */
+    public function defaultAddress()
+    {
+        return $this->hasOne(Address::class)->where('is_default', true);
+    }
+
+    /**
+     * Get the orders for the user.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
-    protected $fillable = ['name', 'email', 'password', 'type', 'bio', 'portfolio', 'photo'];
-
-    protected $casts = [
-        'portfolio' => 'array',
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'phone',
+        'document',
+        'birth_date',
+        'bio',
+        'type',
+        'avatar',
+        'city_id',
+        'email_verified_at',
+        'is_admin'
     ];
+
+    protected $with = ['addresses'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -41,7 +75,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
-    protected $appends = ['rating'];
     public static function boot()
     {
         parent::boot();
@@ -60,41 +93,18 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    public function sendEmailVerificationNotification()
+    public function cartItems()
     {
-        $this->notify(new VerifyEmailCustom);
+        return $this->hasMany(CartItem::class);
     }
 
-    public function projects() {
-        return $this->hasMany(Project::class, 'client_id');
-    }
-
-    public function proposals() {
-        return $this->hasMany(Proposal::class, 'freelancer_id');
-    }
-
-    public function wallet() {
-        return $this->hasOne(Wallet::class);
-    }
-
-    public function sentMessages() {
-        return $this->hasMany(Message::class, 'sender_id');
-    }
-
-    public function receivedMessages() {
-        return $this->hasMany(Message::class, 'receiver_id');
-    }
-
-    public function ratingsGiven() {
-        return $this->hasMany(Rating::class, 'from_user_id');
-    }
-
-    public function ratingsReceived() {
-        return $this->hasMany(Rating::class, 'to_user_id');
-    }
-
-    public function getRatingAttribute()
+    /**
+     * User integrations (dynamic external providers)
+     */
+    public function integrations(): HasMany
     {
-        return round($this->ratingsReceived()->avg('rating'), 1) ?? 0;
+        return $this->hasMany(UserIntegration::class);
     }
+
+
 }

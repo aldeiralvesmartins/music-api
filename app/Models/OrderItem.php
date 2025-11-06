@@ -1,17 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
-class Category extends Model
+class OrderItem extends Model
 {
     use HasFactory;
+
+    protected $table = 'order_items';
 
     /**
      * A chave primária não é autoincrementável.
@@ -19,30 +18,35 @@ class Category extends Model
     public $incrementing = false;
 
     /**
-     * O tipo da chave primária.
+     * Tipo da chave primária.
      */
     protected $keyType = 'string';
-
-    /**
-     * Campos preenchíveis em massa.
-     */
+    // Permite atribuição em massa
     protected $fillable = [
-        'id',
-        'name',
-        'is_active',
-        'slug',
-        'description',
+        'order_id',
+        'product_id',
+        'quantity',
+        'price',
     ];
 
     /**
-     * Casts automáticos.
+     * Relacionamento com o pedido.
      */
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 
     /**
-     * Gera o ID automaticamente antes de criar.
+     * Relacionamento com o produto.
+     */
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Gera automaticamente o ID antes de criar.
      */
     public static function boot()
     {

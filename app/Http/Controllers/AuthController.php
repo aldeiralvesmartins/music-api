@@ -3,73 +3,64 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /**
+     * Register a new user
+     */
     public function register(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'type' => 'required|in:client,freelancer',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'type' => $request->type,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'type' => 'admin',
         ]);
 
-        try {
-            $user->sendEmailVerificationNotification();
-        } catch (\Exception $e) {
-            Log::error('Falha ao enviar e-mail de verificação: ' . $e->getMessage());
-        }
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Usuário registrado com sucesso',
             'user' => $user,
-            'token' => $user->createToken('token')->plainTextToken
+            'access_token' => $token,
+            'token_type' => 'Bearer',
         ], 201);
     }
 
+    /**
+     * Login user and create token
+     */
     public function login(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'remember_me' => 'boolean',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $credentials = $request->only('email', 'password');
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
-                'email' => ['As credenciais estão incorretas.'],
+                'email' => ['As credenciais fornecidas estão incorretas.'],
             ]);
         }
 
-        if (! $user->hasVerifiedEmail()) {
-            // Verifica se já se passou 1 minuto desde o último envio
-            $lastSent = $user->updated_at ?? $user->created_at;
-            $now = Carbon::now();
-
-            if ($now->diffInSeconds($lastSent) > 60) {
-                $user->sendEmailVerificationNotification();
-            }
-
-            return response()->json([
-                'message' => 'verify.in.email',
-            ], 403);
-        }
-
+        $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -79,16 +70,66 @@ class AuthController extends Controller
         ]);
     }
 
-
-    public function me()
+    /**
+     * Logout user (Revoke the token)
+     */
+    public function logout(Request $request)
     {
-        return Auth::user();
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Successfully logged out']);
     }
 
-    public function logout()
+    /**
+     * Get the authenticated User
+     */
+    public function user(Request $request)
     {
-        Auth::user()->currentAccessToken()->delete();
-        return response()->noContent();
+        return response()->json($request->user()->load('addresses'));
+    }
+
+    /**
+     * Send password reset link
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => __($status)])
+            : throw ValidationException::withMessages(['email' => [__($status)]]);
+    }
+
+    /**
+     * Reset password
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => ['required', 'confirmed', PasswordRule::defaults()],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => __($status)])
+            : throw ValidationException::withMessages(['email' => [__($status)]]);
     }
 }
-

@@ -1,48 +1,32 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
-use App\Services\CustomIdService;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
-class Category extends Model
+class LayoutSection extends Model
 {
-    use HasFactory;
-
     /**
      * A chave primária não é autoincrementável.
      */
     public $incrementing = false;
 
     /**
-     * O tipo da chave primária.
+     * Tipo da chave primária.
      */
     protected $keyType = 'string';
 
-    /**
-     * Campos preenchíveis em massa.
-     */
     protected $fillable = [
-        'id',
-        'name',
-        'is_active',
-        'slug',
-        'description',
+        'name', 'title', 'type', 'content', 'position', 'is_active'
     ];
 
-    /**
-     * Casts automáticos.
-     */
     protected $casts = [
+        'content' => 'array',
         'is_active' => 'boolean',
     ];
 
     /**
-     * Gera o ID automaticamente antes de criar.
+     * Gera automaticamente o ID antes de criar.
      */
     public static function boot()
     {

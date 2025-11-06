@@ -1,17 +1,15 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Models;
 
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
-class Category extends Model
+class Cart extends Model
 {
     use HasFactory;
+
 
     /**
      * A chave primária não é autoincrementável.
@@ -19,31 +17,26 @@ class Category extends Model
     public $incrementing = false;
 
     /**
-     * O tipo da chave primária.
+     * Tipo da chave primária.
      */
     protected $keyType = 'string';
 
-    /**
-     * Campos preenchíveis em massa.
-     */
     protected $fillable = [
-        'id',
-        'name',
+        'user_id',
+        'total',
         'is_active',
-        'slug',
-        'description',
     ];
 
-    /**
-     * Casts automáticos.
-     */
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-    /**
-     * Gera o ID automaticamente antes de criar.
-     */
+    public function items()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
     public static function boot()
     {
         parent::boot();

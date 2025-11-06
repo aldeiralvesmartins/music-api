@@ -7,9 +7,10 @@ namespace App\Models;
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-class Category extends Model
+class Product extends Model
 {
     use HasFactory;
 
@@ -19,7 +20,7 @@ class Category extends Model
     public $incrementing = false;
 
     /**
-     * O tipo da chave primária.
+     * Tipo da chave primária.
      */
     protected $keyType = 'string';
 
@@ -29,24 +30,50 @@ class Category extends Model
     protected $fillable = [
         'id',
         'name',
-        'is_active',
-        'slug',
         'description',
+        'price',
+        'image',
+        'category_id',
+        'stock',
+        'is_active',
     ];
 
     /**
      * Casts automáticos.
      */
     protected $casts = [
+        'price' => 'float',
+        'stock' => 'integer',
         'is_active' => 'boolean',
     ];
 
     /**
-     * Gera o ID automaticamente antes de criar.
+     * Relacionamento com Category.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Gera automaticamente o ID antes de criar.
      */
     public static function boot()
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
+    }
+
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * Relacionamento com as especificações do produto
+     */
+    public function specifications(): HasMany
+    {
+        return $this->hasMany(ProductSpecification::class)->orderBy('sort_order');
     }
 }
