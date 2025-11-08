@@ -13,6 +13,7 @@ use App\Http\Requests\Asaas\CancelChargeRequest;
 use App\Http\Requests\Asaas\GetChargeStatusRequest;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Cart;
 
 class AsaasController extends Controller
 {
@@ -129,8 +130,14 @@ class AsaasController extends Controller
             return;
         }
 
+        // Obtém carrinho ativo do usuário para vincular
+        $cart = Cart::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
         $map = [
             'user_id' => Auth::id(),
+            'cart_id' => $cart?->id,
             'asaas_id' => $asaas['id'] ?? null,
             'object' => $asaas['object'] ?? null,
             'date_created' => $asaas['dateCreated'] ?? null,

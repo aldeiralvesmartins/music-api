@@ -78,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/update/{cartItem}', [CartController::class, 'update']);
         Route::delete('/remove/{cartItem}', [CartController::class, 'remove']);
         Route::delete('/clear', [CartController::class, 'clear']);
+        Route::put('/payment-method', [CartController::class, 'updatePaymentMethod']);
+        Route::put('/shipping-method', [CartController::class, 'updateShippingMethod']);
     });
 
     // Address routes

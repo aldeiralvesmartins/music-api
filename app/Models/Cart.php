@@ -25,6 +25,8 @@ class Cart extends Model
         'user_id',
         'total',
         'is_active',
+        'payment_method',
+        'shipping_method',
     ];
 
     public function user()
@@ -42,4 +44,9 @@ class Cart extends Model
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
     }
+
+    protected $casts = [
+        'payment_method' => 'array',
+        'shipping_method' => 'array',
+    ];
 }

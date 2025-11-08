@@ -19,6 +19,7 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
+        'cart_id',
         'asaas_id',
         'object',
         'date_created',
@@ -94,6 +95,11 @@ class Payment extends Model
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
+    }
+
+    public function cart()
+    {
+        return $this->belongsTo(Cart::class, 'cart_id');
     }
 
         /**
