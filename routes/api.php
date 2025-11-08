@@ -13,6 +13,7 @@ use App\Http\Controllers\{Admin\LayoutSectionController,
     ShippingController,
     UserIntegrationController};
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\AsaasController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -33,6 +34,8 @@ Route::prefix('layout')->group(function () {
     Route::get('/', [LayoutSectionController::class, 'index']);
 
 });
+// Public webhook for Asaas callbacks
+Route::post('/asaas/webhook', [AsaasController::class, 'webhook']);
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
     // Shipping calculation (requires authentication to get user address)
@@ -55,6 +58,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment routes
     Route::apiResource('payments', PaymentController::class);
     Route::post('payments/webhook', [PaymentController::class, 'webhook']);
+
+    // Asaas payment routes
+    Route::prefix('asaas')->group(function () {
+        // Charges
+        Route::post('/charges/boleto', [AsaasController::class, 'chargeBoleto']);
+        Route::post('/charges/pix', [AsaasController::class, 'chargePix']);
+        Route::post('/charges/card', [AsaasController::class, 'chargeCard']);
+        Route::get('/charges/{paymentId}', [AsaasController::class, 'getChargeStatus']);
+        Route::delete('/charges/{paymentId}', [AsaasController::class, 'cancelCharge']);
+        // Customer
+        Route::post('/customers', [AsaasController::class, 'createCustomer']);
+    });
 
     // Cart routes
     Route::prefix('cart')->group(function () {

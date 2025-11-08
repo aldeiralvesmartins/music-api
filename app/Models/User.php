@@ -60,7 +60,8 @@ class User extends Authenticatable
         'avatar',
         'city_id',
         'email_verified_at',
-        'is_admin'
+        'is_admin',
+        'customer_id'
     ];
 
     protected $with = ['addresses'];

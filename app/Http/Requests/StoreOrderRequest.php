@@ -21,7 +21,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'address_id' => 'required|exists:addresses,id',
-            'payment_method' => 'required|string|in:pix,cartao,dinheiro,credit_card',
+            'payment_method' => 'required|string|in:pix,cartao,dinheiro,credit_card,boleto',
         ];
     }
 }

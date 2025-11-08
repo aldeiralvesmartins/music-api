@@ -15,6 +15,7 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use function Psy\debug;
@@ -38,6 +39,19 @@ class AsaasService
             'verificarDocumentoAsaas' => "$enverimenteUrl/v3/myAccount/documents"
         ];
         $this->client = new Client();
+    }
+
+    /**
+     * Obtém o status de uma cobrança no Asaas pelo ID do pagamento.
+     * Caso seja informada uma api_key de subconta, ela será utilizada nos headers.
+     */
+    public function obterStatusCobranca(string $paymentId, ?string $apiKey = null): array
+    {
+        $headers = $apiKey ? $this->prepareHeadersCliente($apiKey) : $this->prepareHeaders();
+        $response = $this->client->get($this->url['criarCobranca'] . "/{$paymentId}", [
+            'headers' => $headers
+        ]);
+        return json_decode($response->getBody()->getContents(), true);
     }
 
     /**
@@ -69,7 +83,7 @@ class AsaasService
                     $message = trim($body);
                 }
             }
-
+dd($message);
             throw new \Exception($message); // Joga para cima
         }
     }
@@ -114,9 +128,41 @@ class AsaasService
     public function criarCliente($dados): bool|string
     {
         try {
-            $response = $this->client->post($this->url['criarCliente'],
-                ['headers' => $this->prepareHeaders(), 'json' => $this->prepararDadosParaGerarCliente($dados)]);
-            $retorno = json_decode($response->getBody()->getContents(), true);
+//            $response = $this->client->post($this->url['criarCliente'],
+//                ['headers' => $this->prepareHeaders(), 'json' => $this->prepararDadosParaGerarCliente($dados)]);
+//            $retorno = json_decode($response->getBody()->getContents(), true);
+            $retorno= [ // app/Services/Asaas/AsaasService.php:134
+                "object" => "customer",
+  "id" => "cus_000007203311",
+  "dateCreated" => "2025-11-08",
+  "name" => "Administrador",
+  "email" => "deirnogrc7@gmail.com",
+  "company" => null,
+  "phone" => null,
+  "mobilePhone" => null,
+  "address" => null,
+  "addressNumber" => null,
+  "complement" => null,
+  "province" => null,
+  "postalCode" => null,
+  "cpfCnpj" => "70373047193",
+  "personType" => "FISICA",
+  "deleted" => false,
+  "additionalEmails" => null,
+  "externalReference" => "70373047193",
+  "notificationDisabled" => true,
+  "observations" => null,
+  "municipalInscription" => null,
+  "stateInscription" => null,
+  "canDelete" => true,
+  "cannotBeDeletedReason" => null,
+  "canEdit" => true,
+  "cannotEditReason" => null,
+  "city" => null,
+  "cityName" => null,
+  "state" => null,
+  "country" => "Brasil"
+];
             if (!empty($retorno['id']))
                 $this->CriaVinculoCliente($dados, $retorno['id']);
             return $retorno['id'];
@@ -137,7 +183,7 @@ class AsaasService
                     $message = trim($body);
                 }
             }
-
+dd($message);
             throw new \Exception($message); // Joga para cima
         }
     }
@@ -246,11 +292,7 @@ class AsaasService
      */
     private function prepararDadosParaGerarCobranca($dados): array
     {
-        $customerId = $this->getCustomerId($dados['client']['id']);
-
-        if (!$customerId) {
-            $customerId = $this->criarCliente($dados);
-        }
+        $customerId = $this->getCustomerId($dados['client']['id']) ?? $this->criarCliente($dados);
 
         return array_merge([
             'customer'          => $customerId,

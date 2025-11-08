@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -12,7 +13,12 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        //
+        $userId = Auth::id();
+        $payments = Payment::query()
+            ->where('user_id', $userId)
+            ->latest()
+            ->paginate(20);
+        return response()->json($payments);
     }
 
     /**
@@ -36,7 +42,10 @@ class PaymentController extends Controller
      */
     public function show(Payment $payment)
     {
-        //
+        if ($payment->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+        return response()->json($payment);
     }
 
     /**
@@ -63,3 +72,4 @@ class PaymentController extends Controller
         //
     }
 }
+
