@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +16,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::with('category','specifications')->get();
+        $products = Product::with('category','images','specifications')->get();
         return response()->json($products);
     }
 
@@ -46,7 +45,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'stock' => 'required|integer|min:0',
-            // 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array',
             'is_active' => 'sometimes|boolean',
             'specifications' => 'nullable|array',
             'specifications.*.name' => 'required_with:specifications|string|max:255',
@@ -64,12 +63,6 @@ class ProductController extends Controller
         $data = $validator->validated();
         DB::beginTransaction();
 
-        // Upload da imagem, se existir (comentado no código original)
-        // if ($request->hasFile('image')) {
-        //     $image = $request->file('image');
-        //     $path = $image->store('products', 'public');
-        // }
-
         // Criando o produto
         $product = Product::create($data);
 
@@ -78,12 +71,14 @@ class ProductController extends Controller
             $this->saveSpecifications($product, $data['specifications']);
         }
 
+        foreach ($data['images'] ?? [] as $url) {
+            $product->images()->create(['url' => $url]);
+        }
+
         DB::commit();
 
         return response()->json($product, 201);
     }
-
-
 
     /**
      * Atualiza um produto existente.

@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Image;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -27,7 +28,7 @@ class DatabaseSeeder extends Seeder
 
         // ---- PRODUTOS ----
         $products = [
-            [
+            'bastao_carvalho' => [
                 'id' => Str::random(24),
                 'name' => 'Bastão de Carvalho Maciço',
                 'description' => 'Bastão tradicional de carvalho envelhecido, perfeito para treinos de defesa pessoal e artes marciais. Cada unidade é selecionada entre as melhores madeiras para garantir durabilidade e equilíbrio excepcionais.',
@@ -39,7 +40,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
+            'bastao_monge' => [
                 'id' => Str::random(24),
                 'name' => 'Bastão do Monge - Era Perdida',
                 'description' => 'Inspirado nas tradições monásticas, este bastão combina simplicidade e eficácia. Ideal para praticantes que buscam conexão espiritual através das artes marciais, oferecendo controle preciso em cada movimento.',
@@ -51,7 +52,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
+            'nunchaku' => [
                 'id' => Str::random(24),
                 'name' => 'Nunchaku Profissional',
                 'description' => 'Nunchaku de alta performance com correntes de aço e hastes de carvalho. Desenvolvido para treinos avançados, oferece velocidade e fluidez nos movimentos, sendo essencial para dominar esta arte milenar.',
@@ -63,7 +64,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
+            'faca_artesanal' => [
                 'id' => Str::random(24),
                 'name' => 'Faca Artesanal para Churrasco',
                 'description' => 'Mais que uma faca, uma obra de arte em aço inox. Lâmina temperada e afiada manualmente, perfeita para cortes precisos. O cabo ergonômico proporciona segurança e conforto durante o uso prolongado.',
@@ -75,7 +76,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
+            'faca_gaucha' => [
                 'id' => Str::random(24),
                 'name' => 'Faca Gaúcha Tradicional',
                 'description' => 'Símbolo da cultura gaúcha, esta faca combina tradição e funcionalidade. Lâmina robusta com acabamento em couro legítimo, ideal para atividades campestres e colecionadores que valorizam o artesanal.',
@@ -87,7 +88,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
+            'katana_samurai' => [
                 'id' => Str::random(24),
                 'name' => 'Katana Samurai Artesanal',
                 'description' => 'Katana forjada com aço carbono de alta resistência, seguindo as tradições dos mestres espadeiros japoneses. Lâmina full tang com tempera diferenciada, bainha em couro legítimo e detalhes em bronze.',
@@ -99,7 +100,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
+            'jutte' => [
                 'id' => Str::random(24),
                 'name' => 'Jutte - Arma de Defesa Samurai',
                 'description' => 'Arma tradicional japonesa utilizada por oficiais durante o período Edo. Projetada para defesa e imobilização, esta Jutte é perfeita para colecionadores e praticantes de kobudo que buscam autenticidade histórica.',
@@ -113,8 +114,38 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($products as $product) {
+        foreach ($products as $key => $product) {
             DB::table('products')->insert($product);
+
+            $images = [
+                'bastao_carvalho' => [
+                    'https://rpg.charlescorrea.com.br/wp-content/uploads/2021/12/Bo.jpg',
+                    'https://static.veracaampos.com.br/public/veracaampos/imagens/produtos/bastao-de-alongamento-em-madeira-2420.jpg',
+                ],
+                'bastao_monge' => [
+                    'https://eraperdida.weebly.com/uploads/2/7/1/1/27112571/3306938_orig.jpg'],
+                'nunchaku' => [
+                    'https://rpg.charlescorrea.com.br/wp-content/uploads/2021/11/Nunchaku.jpg',
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDKc0pS-0doKmOs65G6AnISefXw9vY-Tco3w&s',
+                ],
+                'faca_artesanal' => [
+                    'https://images.tcdn.com.br/img/img_prod/1267948/copia_faca_artesanal_churrasco_aco_inox_rustica_2mm_10_polegadas_personalizada_33_1_f86006f01b08b165781385ae87da4352.jpg'],
+                'faca_gaucha' => [
+                    'https://cdn.awsli.com.br/300x300/2539/2539754/produto/271955131/1-ld3zvwa87d.png'],
+                'katana_samurai' => [
+                    'https://cdn.awsli.com.br/600x1000/2515/2515067/produto/2342375710a51647aa8.jpg',
+                    'https://a-static.mlcdn.com.br/420x420/espada-estilo-katana-samurai-artesanal-18-adaga-carbono-bainha-couro-full-tang-brut-forge-facas-zanline/clizashop/125espp/b8ea892ad46c40f4a32212ee039d1d3f.jpeg'],
+                'jutte' => [
+                    'https://rpg.charlescorrea.com.br/wp-content/uploads/2021/12/Jutte-weapon.jpg'],
+            ];
+
+            foreach ($images[$key] as $url) {
+                Image::create([
+                    'url' => $url,
+                    'imageable_type' => 'App\Models\Product',
+                    'imageable_id' => $product['id'],
+                ]);
+            }
         }
 
         // ---- ADMIN ----
