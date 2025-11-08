@@ -64,6 +64,11 @@ class Product extends Model
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
     }
 
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable');
+    }
+
     public function cartItems()
     {
         return $this->hasMany(CartItem::class);
