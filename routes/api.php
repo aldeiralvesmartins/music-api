@@ -83,13 +83,15 @@ Route::middleware('handler.exception')->group(function () {
         });
 
         // Cart routes
-        Route::prefix('cart')->group(function () {
-            Route::get('/', [CartController::class, 'index']);
-            Route::post('/add', [CartController::class, 'add']);
-            Route::put('/update/{cartItem}', [CartController::class, 'update']);
-            Route::delete('/remove/{cartItem}', [CartController::class, 'remove']);
-            Route::delete('/clear', [CartController::class, 'clear']);
-        });
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('/add', [CartController::class, 'add']);
+        Route::put('/update/{cartItem}', [CartController::class, 'update']);
+        Route::delete('/remove/{cartItem}', [CartController::class, 'remove']);
+        Route::delete('/clear', [CartController::class, 'clear']);
+        Route::put('/payment-method', [CartController::class, 'updatePaymentMethod']);
+        Route::put('/shipping-method', [CartController::class, 'updateShippingMethod']);
+    });
 
         // Address routes
         Route::apiResource('addresses', AddressController::class);

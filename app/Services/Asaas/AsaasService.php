@@ -83,7 +83,7 @@ class AsaasService
                     $message = trim($body);
                 }
             }
-dd($message);
+
             throw new \Exception($message); // Joga para cima
         }
     }
@@ -128,41 +128,10 @@ dd($message);
     public function criarCliente($dados): bool|string
     {
         try {
-//            $response = $this->client->post($this->url['criarCliente'],
-//                ['headers' => $this->prepareHeaders(), 'json' => $this->prepararDadosParaGerarCliente($dados)]);
-//            $retorno = json_decode($response->getBody()->getContents(), true);
-            $retorno= [ // app/Services/Asaas/AsaasService.php:134
-                "object" => "customer",
-  "id" => "cus_000007203311",
-  "dateCreated" => "2025-11-08",
-  "name" => "Administrador",
-  "email" => "deirnogrc7@gmail.com",
-  "company" => null,
-  "phone" => null,
-  "mobilePhone" => null,
-  "address" => null,
-  "addressNumber" => null,
-  "complement" => null,
-  "province" => null,
-  "postalCode" => null,
-  "cpfCnpj" => "70373047193",
-  "personType" => "FISICA",
-  "deleted" => false,
-  "additionalEmails" => null,
-  "externalReference" => "70373047193",
-  "notificationDisabled" => true,
-  "observations" => null,
-  "municipalInscription" => null,
-  "stateInscription" => null,
-  "canDelete" => true,
-  "cannotBeDeletedReason" => null,
-  "canEdit" => true,
-  "cannotEditReason" => null,
-  "city" => null,
-  "cityName" => null,
-  "state" => null,
-  "country" => "Brasil"
-];
+            $response = $this->client->post($this->url['criarCliente'],
+                ['headers' => $this->prepareHeaders(), 'json' => $this->prepararDadosParaGerarCliente($dados)]);
+            $retorno = json_decode($response->getBody()->getContents(), true);
+
             if (!empty($retorno['id']))
                 $this->CriaVinculoCliente($dados, $retorno['id']);
             return $retorno['id'];
@@ -183,7 +152,7 @@ dd($message);
                     $message = trim($body);
                 }
             }
-dd($message);
+
             throw new \Exception($message); // Joga para cima
         }
     }
@@ -292,7 +261,12 @@ dd($message);
      */
     private function prepararDadosParaGerarCobranca($dados): array
     {
-        $customerId = $this->getCustomerId($dados['client']['id']) ?? $this->criarCliente($dados);
+        $customerId = $this->getCustomerId($dados['client']['id']);
+
+        if (!$customerId) {
+
+            $customerId = $this->criarCliente($dados);
+        }
 
         return array_merge([
             'customer'          => $customerId,
@@ -313,6 +287,7 @@ dd($message);
     private function prepararDadosParaGerarCliente($dados): array
     {
         $cliente = User::find($dados['client']['id']);
+
         $documentoPagador = $this->removerCaracteresNaoNumericos($cliente->taxpayer);
 //        $cep = $this->removerCaracteresNaoNumericos($cliente->address->zip_code);
 //        $bairro = $this->removerAcentos($cliente->address->neighborhood);
