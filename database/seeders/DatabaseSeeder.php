@@ -224,5 +224,7 @@ class DatabaseSeeder extends Seeder
         foreach ($layoutSections as $section) {
             DB::table('layout_sections')->insert($section);
         }
+        $this->call(StoreSettingsSeeder::class);
+
     }
 }
