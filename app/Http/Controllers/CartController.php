@@ -19,7 +19,7 @@ class CartController extends Controller
     {
         $user = auth()->user();
 
-        $items = $user->cartItems()->with(['product', 'specifications'])->get();
+        $items = $user->cartItems()->with(['product.images', 'specifications'])->get();
 
         $total = $items->sum(fn($item) => $item->subtotal);
 
