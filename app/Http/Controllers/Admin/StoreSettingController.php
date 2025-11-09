@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StoreSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Http\Requests\Admin\StoreSettingStoreRequest;
 use App\Http\Requests\Admin\StoreSettingUpdateRequest;
 
@@ -70,6 +71,33 @@ class StoreSettingController extends Controller
         $this->authorizeOwnership($storeSetting);
         $storeSetting->delete();
         return response()->json(['success' => true]);
+    }
+
+    // Admin: toggle or set is_active
+    public function toggle(Request $request, StoreSetting $storeSetting)
+    {
+        $this->authorizeOwnership($storeSetting);
+        $data = $request->validate([
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $newValue = array_key_exists('is_active', $data)
+            ? (bool) $data['is_active']
+            : !$storeSetting->is_active;
+
+        DB::transaction(function () use ($storeSetting, $newValue) {
+            if ($newValue) {
+                // Deactivate all other settings of this admin
+                StoreSetting::where('user_id', $storeSetting->user_id)
+                    ->where('id', '!=', $storeSetting->id)
+                    ->update(['is_active' => false]);
+            }
+
+            $storeSetting->is_active = $newValue;
+            $storeSetting->save();
+        });
+
+        return response()->json(['success' => true, 'data' => $storeSetting->fresh()]);
     }
 
     // Validation now handled by Form Requests

@@ -146,6 +146,7 @@ Route::middleware('handler.exception')->group(function () {
             });
             // Store settings management
             Route::apiResource('store-settings', StoreSettingController::class);
+            Route::patch('store-settings/{storeSetting}/toggle', [StoreSettingController::class, 'toggle']);
         });
         Route::apiResource('cart', CartController::class);
     });
