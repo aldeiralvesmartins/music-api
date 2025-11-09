@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{Admin\LayoutSectionController,
+    Admin\StoreSettingController,
     AuthController,
     ProductController,
     CategoryController,
@@ -36,6 +37,8 @@ Route::middleware('handler.exception')->group(function () {
         Route::get('/', [LayoutSectionController::class, 'index']);
 
     });
+    // Public store settings (active)
+    Route::get('/store/settings', [StoreSettingController::class, 'publicShow']);
 // Public webhook for Asaas callbacks
     Route::post('/asaas/webhook', [AsaasController::class, 'webhook']);
 // Protected routes (require authentication)
@@ -141,6 +144,8 @@ Route::middleware('handler.exception')->group(function () {
                 Route::put('/{layoutSection}', [LayoutSectionController::class, 'update']);
                 Route::delete('/{layoutSection}', [LayoutSectionController::class, 'destroy']);
             });
+            // Store settings management
+            Route::apiResource('store-settings', StoreSettingController::class);
         });
         Route::apiResource('cart', CartController::class);
     });

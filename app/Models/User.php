@@ -107,5 +107,13 @@ class User extends Authenticatable
         return $this->hasMany(UserIntegration::class);
     }
 
+    /**
+     * Store settings owned by the admin user
+     */
+    public function storeSettings(): HasMany
+    {
+        return $this->hasMany(StoreSetting::class);
+    }
+
 
 }
