@@ -244,6 +244,23 @@ class DatabaseSeeder extends Seeder
                 'position' => 4,
                 'is_active' => true,
             ],
+            [
+                'id' => 'LAYO_QCpJ510jB2QvLoe54Sg',
+                'name' => 'features',
+                'title' => 'features',
+                'type' => 'features',
+                'content' => [
+                    "title" => "Por que escolher a Forja?",
+                    "subtitle" => "Compromissos que mantemos em cada pedido",
+                    "items" => [
+                        ["icon" => "shield", "title" => "Entrega Segura", "description" => "Armas entregues com segurança e discrição."],
+                        ["icon" => "check", "title" => "Qualidade Garantida", "description" => "Materiais selecionados e técnicas tradicionais."],
+                        ["icon" => "award", "title" => "Forjado com Honra", "description" => "Respeito marcial passado por gerações."]
+                    ]
+                ],
+                'position' => 4,
+                'is_active' => true,
+            ],
         ];
 
         // Insere no banco
