@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Model;
 
 class LayoutSection extends Model

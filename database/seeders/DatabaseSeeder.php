@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Image;
+use App\Models\LayoutSection;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -153,76 +155,110 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        // ---- LAYOUT SECTIONS ----
+        // Busca todos os IDs das categorias existentes no banco
+        $categoryIds = Category::pluck('id')->toArray();
+
+        // Define os layouts
         $layoutSections = [
             [
-                'name' => 'banner_principal',
-                'title' => 'Coleção Samurai – Força e Tradição',
-                'type' => 'banner',
-                'content' => json_encode([
+                'id' => 'LAYO_MNlzmnxZqRSpF5Ef16h',
+                'name' => 'hero_principal',
+                'title' => 'Hero',
+                'type' => 'hero',
+                'content' => [
+                    'badge' => 'Armas 100% Autênticas',
+                    'title' => 'Forja Marcial',
+                    'title_emphasis' => 'em Cada Arma',
+                    'subtitle' => 'Descubra a tradição...',
                     'images' => [
-                        '/storage/banners/banner-samurai1.jpg',
-                        '/storage/banners/banner-samurai2.jpg',
-                        '/storage/banners/banner-samurai3.jpg'
+                        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+                        'https://cjblademaster.com.br/wp-content/uploads/2023/08/d7e1bbc3-018d-4964-bd1d-5752709fcbc2.jpg',
+                        'https://media.sketchfab.com/models/d39089f29fbb4b5babc1f1cf0d8ff652/thumbnails/191eef7f7ed148beb877f4ae56095e31/35be297d69d9445ab2d5899654f5d613.jpeg',
+                        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5-XAe9e-NbZtoNR6csrqjLMfx6kiu7jStpjC9mmAYpJw636l4SPlSQh87g18p9ymUB3w&usqp=CAU'
                     ],
-                    'link' => '/produtos',
-                    'autoplay' => true,
-                    'interval' => 4000
-                ]),
+                    'video_url' => 'https://www.youtube.com/watch?v=sNNHlD8b-KM',
+                    'ctas' => [
+                        ['label' => 'Ver Armas', 'to' => '/#produtos'],
+                        ['label' => 'Nossa História', 'action' => 'open_history', 'variant' => 'secondary'],
+                    ],
+                    'stats' => [
+                        ['value' => '25+', 'label' => 'Anos de Tradição'],
+                        ['value' => '10k+', 'label' => 'Guerreiros Satisfeitos'],
+                        ['value' => '100%', 'label' => 'Autênticas'],
+                    ],
+                ],
                 'position' => 1,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
-                'name' => 'categorias_destaque',
-                'title' => 'Navegue por Categorias',
-                'type' => 'categorias',
-                'content' => json_encode([
-                    'display' => 'grid',
-                    'columns' => 3,
-                    'style' => 'rounded',
-                    'categories' => array_column($categories, 'id')
-                ]),
-                'position' => 2,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
+                'id' => 'LAYO_mp8Ff63XgRXyHCL9QXG',
                 'name' => 'produtos_mais_vendidos',
                 'title' => 'Mais Vendidos',
                 'type' => 'produtos',
-                'content' => json_encode([
-                    'limit' => 6,
-                    'sort' => 'mais_vendidos',
-                    'show_price' => true,
-                    'show_button' => true
-                ]),
-                'position' => 3,
+                'content' => [
+                    'badge' => 'Nossa Coleção',
+                    'title' => 'Armas Marciais',
+                    'subtitle' => 'Seleção exclusiva',
+                    'show_category_filters' => true,
+                    'category_ids' => $categoryIds, // ← dinamicamente do banco
+                    'limit' => 8,
+                ],
+                'position' => 2,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
-                'name' => 'texto_promocional',
-                'title' => 'Qualidade e História em Cada Lâmina',
-                'type' => 'texto',
-                'content' => json_encode([
-                    'text' => 'Cada peça do nosso acervo carrega a tradição dos mestres ferreiros e o espírito das artes marciais. Descubra a união entre força, equilíbrio e estética em produtos feitos para durar.',
-                    'align' => 'center',
-                    'background' => '#fdf6ec',
-                    'color' => '#222',
-                ]),
+                'id' => 'LAYO_S93aKRNkk0B1t530SnM',
+                'name' => 'banner_galeria',
+                'title' => 'Galeria',
+                'type' => 'pictures',
+                'content' => [
+                    'title' => 'Galeria',
+                    'subtitle' => 'Imagens em destaque',
+                    'images' => [
+                        ['src' => 'https://.../pic1.jpg', 'title' => 'Katana'],
+                        ['src' => 'https://.../pic2.jpg', 'caption' => 'Nunchaku'],
+                        ['src' => 'https://.../pic3.jpg'],
+                        ['src' => 'https://.../pic4.jpg'],
+                    ],
+                ],
+                'position' => 3,
+                'is_active' => true,
+            ],
+            [
+                'id' => 'LAYO_QCpJ510jB2QvLoN13Sg',
+                'name' => 'cta_principal',
+                'title' => 'cta',
+                'type' => 'cta',
+                'content' => [
+                    'title' => 'Pronto para dominar?',
+                    'subtitle' => 'Faça seu pedido agora...',
+                    'ctas' => [
+                        ['label' => 'Criar Conta Grátis', 'to' => '/register'],
+                    ],
+                    'bullets' => [
+                        'Entrega Segura',
+                        'Armas Autênticas',
+                        'Qualidade Garantida',
+                    ],
+                ],
                 'position' => 4,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
         ];
 
+        // Insere no banco
         foreach ($layoutSections as $section) {
-            DB::table('layout_sections')->insert($section);
+            LayoutSection::create([
+                'id' => $section['id'],
+                'name' => $section['name'],
+                'title' => $section['title'],
+                'type' => $section['type'],
+                'content' => $section['content'], // converte para JSON válido
+                'position' => $section['position'],
+                'is_active' => $section['is_active'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
         $this->call(StoreSettingsSeeder::class);
 

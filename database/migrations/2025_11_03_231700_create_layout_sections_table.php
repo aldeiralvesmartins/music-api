@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('layout_sections', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
             $table->string('name'); // Nome interno da seção (ex: banner_principal, categorias, produtos_destaque)
             $table->string('title')->nullable(); // Título exibido, ex: "Produtos em destaque"
             $table->string('type')->nullable(); // Tipo: banner, produtos, categorias, texto, etc.
