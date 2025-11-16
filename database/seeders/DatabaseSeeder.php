@@ -160,6 +160,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345678'),
             'type' => 'admin',
             'is_admin' => true,
+            'taxpayer' => '70373047193',
             'company_id' => $companyId,
             'created_at' => now(),
             'updated_at' => now(),
