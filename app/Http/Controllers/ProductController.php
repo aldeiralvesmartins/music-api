@@ -8,16 +8,105 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     /**
      * Lista todos os produtos.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category','images','specifications')->get();
-        return response()->json($products);
+        $validated = $request->validate([
+            'q' => ['nullable', 'string'],
+            'category_id' => ['nullable', 'string'],
+            'allowed_categories' => ['nullable', 'array'],
+            'allowed_categories.*' => ['string'],
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => ['nullable', 'numeric', 'min:0'],
+            'min_rating' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'brand' => ['nullable', 'string'],
+            'sort' => [
+                'nullable',
+                Rule::in(['name_asc','name_desc','price_asc','price_desc','rating_desc','newest']),
+            ],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $perPage = (int)($validated['per_page'] ?? 20);
+
+        $query = Product::query()->with(['images', 'category','specifications']);
+
+        // Filtro explícito por companhia para garantir o escopo de tenant
+        $companyId = app()->bound('company_id') ? app('company_id') : null;
+        if ($companyId) {
+            $query->where($query->getModel()->getTable() . '.company_id', $companyId);
+        }
+
+        if (!empty($validated['q'])) {
+            $q = $validated['q'];
+            $query->where(function ($qbuilder) use ($q) {
+                $qbuilder->where('name', 'LIKE', "%{$q}%")
+                    ->orWhere('description', 'LIKE', "%{$q}%");
+            });
+        }
+
+        if (!empty($validated['category_id'])) {
+            $query->where('category_id', $validated['category_id']);
+        }
+
+        if (!empty($validated['allowed_categories'])) {
+            $query->whereIn('category_id', $validated['allowed_categories']);
+        }
+
+        if (isset($validated['min_price'])) {
+            $query->where('price', '>=', $validated['min_price']);
+        }
+        if (isset($validated['max_price'])) {
+            $query->where('price', '<=', $validated['max_price']);
+        }
+
+        if (isset($validated['min_rating'])) {
+            $query->where('rating', '>=', $validated['min_rating']);
+        }
+
+        if (!empty($validated['brand'])) {
+            $query->where('brand', $validated['brand']);
+        }
+
+        switch ($validated['sort'] ?? 'name_asc') {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'rating_desc':
+                $query->orderBy('rating', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $paginator = $query->paginate($perPage)->appends($request->query());
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 
     /**
