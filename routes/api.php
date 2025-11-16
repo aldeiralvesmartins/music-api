@@ -156,7 +156,9 @@ Route::middleware('handler.exception')->group(function () {
         Route::apiResource('cart', CartController::class);
     });
 });
-Route::get('/produto/{id}', function ($id) {
-    $frontUrl = env('HOST_FRONT', 'https://commercefront.taskanalyzer.com');
-    return redirect()->away($frontUrl . '/product/' . $id);
+
+Route::get('/produto/{id}/share', function($id) {
+    $product = Product::with(['category', 'images', 'specifications'])
+        ->findOrFail($id);
+    return view('share', ['product' => $product]);
 });
