@@ -156,8 +156,3 @@ Route::middleware('handler.exception')->group(function () {
         Route::apiResource('cart', CartController::class);
     });
 });
-
-Route::get('/produto/{id}/share', function($id) {
-    $product = Product::findOrFail($id);
-    return view('share', ['product' => $product]);
-});
