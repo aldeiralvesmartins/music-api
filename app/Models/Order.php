@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\TenantScoped;
 
 class Order extends Model
 {
     use HasFactory;
+    use TenantScoped;
 
     /**
      * A chave primária não é autoincrementável.
@@ -26,6 +28,7 @@ class Order extends Model
         'total',
         'status',
         'payment_method',
+        'company_id',
     ];
 
     public function items()
@@ -61,5 +64,10 @@ class Order extends Model
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

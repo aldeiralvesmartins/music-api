@@ -73,7 +73,8 @@ return new class extends Migration {
 
             // Payload bruto para auditoria
             $table->json('raw')->nullable();
-
+            $table->string('cart_id', 24)->nullable()->after('user_id')->index();
+            $table->string('order_id')->nullable()->after('user_id')->index();
             $table->timestamps();
 
                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

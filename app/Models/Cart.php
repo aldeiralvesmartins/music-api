@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\TenantScoped;
 
 class Cart extends Model
 {
     use HasFactory;
+    use TenantScoped;
 
 
     /**
@@ -23,6 +25,7 @@ class Cart extends Model
 
     protected $fillable = [
         'user_id',
+        'company_id',
         'total',
         'is_active',
         'payment_method',
@@ -49,4 +52,9 @@ class Cart extends Model
         'payment_method' => 'array',
         'shipping_method' => 'array',
     ];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 }

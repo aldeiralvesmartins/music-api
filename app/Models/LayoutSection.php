@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\TenantScoped;
 
 class LayoutSection extends Model
 {
+    use TenantScoped;
     /**
      * A chave primária não é autoincrementável.
      */
@@ -18,7 +20,7 @@ class LayoutSection extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'name', 'title', 'type', 'content', 'position', 'is_active'
+        'name', 'title', 'type', 'content', 'position', 'is_active', 'company_id'
     ];
 
     protected $casts = [
@@ -33,5 +35,10 @@ class LayoutSection extends Model
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

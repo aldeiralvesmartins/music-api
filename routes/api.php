@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{Admin\LayoutSectionController,
     Admin\StoreSettingController,
     AuthController,
+    CompanyController,
     ProductController,
     CategoryController,
     OrderController,
@@ -23,6 +25,9 @@ Route::middleware('handler.exception')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// Company routes (public)
+    Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
 
 // Product routes (public)
     Route::apiResource('products', ProductController::class)->only(['index', 'show']);
@@ -150,4 +155,9 @@ Route::middleware('handler.exception')->group(function () {
         });
         Route::apiResource('cart', CartController::class);
     });
+});
+
+Route::get('/produto/{id}/share', function($id) {
+    $product = Product::findOrFail($id);
+    return view('share', ['product' => $product]);
 });

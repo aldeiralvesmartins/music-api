@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\TenantScoped;
 
 class OrderItem extends Model
 {
     use HasFactory;
+    use TenantScoped;
 
     protected $table = 'order_items';
 
@@ -25,6 +27,7 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'company_id',
         'quantity',
         'price',
     ];
@@ -52,5 +55,10 @@ class OrderItem extends Model
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

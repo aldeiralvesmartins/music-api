@@ -77,7 +77,7 @@ class AdminController extends Controller
     public function deleteUser(string $id)
     {
         $user = User::findOrFail($id);
-        
+
         // Prevent deleting own account
         if ($user->id === auth()->id()) {
             return response()->json(['message' => 'You cannot delete your own account'], 403);
@@ -95,7 +95,7 @@ class AdminController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         $status = $request->input('status');
-        
+
         $query = Order::with(['user', 'items.product'])
             ->when($status, function ($q) use ($status) {
                 return $q->where('status', $status);

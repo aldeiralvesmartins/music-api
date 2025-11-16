@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Models\Concerns\TenantScoped;
 
 class Product extends Model
 {
     use HasFactory;
+    use TenantScoped;
 
     /**
      * A chave primária não é autoincrementável.
@@ -36,6 +38,7 @@ class Product extends Model
         'category_id',
         'stock',
         'is_active',
+        'company_id',
     ];
 
     /**
@@ -80,5 +83,10 @@ class Product extends Model
     public function specifications(): HasMany
     {
         return $this->hasMany(ProductSpecification::class)->orderBy('sort_order');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

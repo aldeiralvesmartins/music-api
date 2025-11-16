@@ -8,10 +8,12 @@ use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\Concerns\TenantScoped;
 
 class Category extends Model
 {
     use HasFactory;
+    use TenantScoped;
 
     /**
      * A chave primária não é autoincrementável.
@@ -32,6 +34,7 @@ class Category extends Model
         'is_active',
         'slug',
         'description',
+        'company_id',
     ];
 
     /**
@@ -48,5 +51,10 @@ class Category extends Model
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

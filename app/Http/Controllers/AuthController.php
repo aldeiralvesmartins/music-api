@@ -21,15 +21,20 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'document' => 'required|string|max:18',
+            'type' => 'nullable|string|max:10',
             'email' => 'required|string|email|max:255|unique:users',
+            'is_admin' => 'nullable|boolean',
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'is_admin' => $validated['is_admin'],
             'password' => Hash::make($validated['password']),
-            'type' => 'admin',
+            'type' => $validated['type'],
+            'document' => $validated['document'],
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

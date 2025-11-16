@@ -10,10 +10,12 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use App\Models\Concerns\TenantScoped;
 
 class User extends Authenticatable
 {
     use HasApiTokens,HasFactory, Notifiable;
+    use TenantScoped;
     protected $primaryKey = 'id';
 
     public $incrementing = false; // porque o id é string
@@ -61,7 +63,8 @@ class User extends Authenticatable
         'city_id',
         'email_verified_at',
         'is_admin',
-        'customer_id'
+        'customer_id',
+        'company_id'
     ];
 
     protected $with = ['addresses'];
@@ -115,5 +118,9 @@ class User extends Authenticatable
         return $this->hasMany(StoreSetting::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
 }

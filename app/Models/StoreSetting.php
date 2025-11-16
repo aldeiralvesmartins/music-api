@@ -5,9 +5,11 @@ namespace App\Models;
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\TenantScoped;
 
 class StoreSetting extends Model
 {
+    use TenantScoped;
     /**
      * Primary key is not auto-incrementing.
      */
@@ -21,6 +23,7 @@ class StoreSetting extends Model
     protected $fillable = [
         'id',
         'user_id',
+        'company_id',
         'store_name',
         'primary_color',
         'secondary_color',
@@ -47,5 +50,10 @@ class StoreSetting extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

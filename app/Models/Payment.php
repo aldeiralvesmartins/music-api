@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\TenantScoped;
 
 class Payment extends Model
 {
+    use TenantScoped;
     /**
      * A chave primária não é autoincrementável.
      */
@@ -20,6 +22,7 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'cart_id',
+        'company_id',
         'asaas_id',
         'object',
         'date_created',
@@ -109,5 +112,10 @@ class Payment extends Model
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

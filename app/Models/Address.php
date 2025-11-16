@@ -5,9 +5,11 @@ namespace App\Models;
 use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\TenantScoped;
 
 class Address extends Model
 {
+    use TenantScoped;
     /**
      * A chave primária não é autoincrementável.
      */
@@ -25,6 +27,7 @@ class Address extends Model
      */
     protected $fillable = [
         'user_id',
+        'company_id',
         'is_default',
         'zip_code',
         'street',
@@ -59,6 +62,11 @@ class Address extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

@@ -6,10 +6,12 @@ use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\TenantScoped;
 
 class UserIntegration extends Model
 {
     use HasFactory;
+    use TenantScoped;
 
     protected $table = 'user_integrations';
     protected $primaryKey = 'id';
@@ -19,6 +21,7 @@ class UserIntegration extends Model
     protected $fillable = [
         'id',
         'user_id',
+        'company_id',
         'category',
         'provider',
         'name', // ← NOVO
@@ -52,6 +55,11 @@ class UserIntegration extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

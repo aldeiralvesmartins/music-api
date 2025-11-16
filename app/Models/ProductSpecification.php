@@ -6,10 +6,12 @@ use App\Services\CustomIdService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\TenantScoped;
 
 class ProductSpecification extends Model
 {
     use HasFactory;
+    use TenantScoped;
     /**
      * A chave primária não é autoincrementável.
      */
@@ -21,6 +23,7 @@ class ProductSpecification extends Model
     protected $keyType = 'string';
     protected $fillable = [
         'product_id',
+        'company_id',
         'name',
         'value',
         'display_value',
@@ -40,6 +43,11 @@ class ProductSpecification extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**

@@ -17,11 +17,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(CompanySeeder::class);
+        $companyId = app('company_id');
         // ---- CATEGORIAS ----
         $categories = [
-            ['id' => Str::random(24), 'name' => 'Armas de Madeira', 'slug' => 'armas-madeira', 'description' => 'Armas tradicionais feitas em madeira de alta qualidade', 'is_active' => true],
-            ['id' => Str::random(24), 'name' => 'Armas Brancas', 'slug' => 'armas-brancas', 'description' => 'Lâminas artesanais para colecionadores e praticantes', 'is_active' => true],
-            ['id' => Str::random(24), 'name' => 'Armas Orientais', 'slug' => 'armas-orientais', 'description' => 'Armas tradicionais das artes marciais orientais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Armas de Madeira', 'slug' => 'armas-madeira', 'description' => 'Armas tradicionais feitas em madeira de alta qualidade', 'is_active' => true, 'company_id' => $companyId],
+            ['id' => Str::random(24), 'name' => 'Armas Brancas', 'slug' => 'armas-brancas', 'description' => 'Lâminas artesanais para colecionadores e praticantes', 'is_active' => true, 'company_id' => $companyId],
+            ['id' => Str::random(24), 'name' => 'Armas Orientais', 'slug' => 'armas-orientais', 'description' => 'Armas tradicionais das artes marciais orientais', 'is_active' => true, 'company_id' => $companyId],
         ];
 
         foreach ($categories as $category) {
@@ -40,6 +42,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
             'bastao_monge' => [
                 'id' => Str::random(24),
@@ -51,6 +54,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
             'nunchaku' => [
                 'id' => Str::random(24),
@@ -62,6 +66,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
             'faca_artesanal' => [
                 'id' => Str::random(24),
@@ -73,6 +78,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
             'faca_gaucha' => [
                 'id' => Str::random(24),
@@ -84,6 +90,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
             'katana_samurai' => [
                 'id' => Str::random(24),
@@ -95,6 +102,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
             'jutte' => [
                 'id' => Str::random(24),
@@ -106,6 +114,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+                'company_id' => $companyId,
             ],
         ];
 
@@ -151,6 +160,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('12345678'),
             'type' => 'admin',
             'is_admin' => true,
+            'company_id' => $companyId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

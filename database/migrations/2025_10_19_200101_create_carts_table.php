@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('user_id', 24);
             $table->decimal('total', 10, 2)->default(0);
             $table->boolean('is_active')->default(true); // Ativo ou finalizado
+            $table->json('payment_method')->nullable()->after('total');
+            $table->json('shipping_method')->nullable()->after('payment_method');
             $table->timestamps();
 
             $table->foreign('user_id')
