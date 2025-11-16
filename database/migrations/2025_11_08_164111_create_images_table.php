@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('images', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
             $table->string('url');
             $table->string('imageable_type');
             $table->string('imageable_id', 24);
