@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>{{ $product->name }}</title>
 
-    <!-- Open Graph (para WhatsApp, FB, Telegram) -->
+    <!-- Open Graph -->
     <meta property="og:type" content="product">
     <meta property="og:title" content="{{ $product->name }}">
     <meta property="og:description" content="{{ $product->description }}">
@@ -19,8 +19,15 @@
     <meta property="product:price:currency" content="BRL">
     <meta property="product:category" content="{{ $product->category->name ?? '' }}">
 
-    <!-- Redirecionamento automático para o frontend -->
-    <meta http-equiv="refresh" content="0;url={{ env('HOST_FRONT').'/product/'.$product->id }}">
+    <script>
+        // Redireciona somente usuários humanos
+        document.addEventListener("DOMContentLoaded", function() {
+            // Pequeno delay opcional para garantir OG lido pelos bots
+            setTimeout(function() {
+                window.location.href = "{{ env('HOST_FRONT') . '/product/' . $product->id }}";
+            }, 100);
+        });
+    </script>
 </head>
 <body>
 <p>Redirecionando para o produto...</p>
