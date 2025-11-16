@@ -18,6 +18,16 @@
     <meta property="product:price:amount" content="{{ number_format($product->price, 2, '.', '') }}">
     <meta property="product:price:currency" content="BRL">
     <meta property="product:category" content="{{ $product->category->name ?? '' }}">
+
+    <script>
+        // Redireciona somente usuários humanos
+        document.addEventListener("DOMContentLoaded", function() {
+            // Pequeno delay opcional para garantir OG lido pelos bots
+            setTimeout(function() {
+                window.location.href = "{{ env('HOST_FRONT') . '/product/' . $product->id }}";
+            }, 100);
+        });
+    </script>
 </head>
 <body style="font-family: sans-serif; text-align: center; padding: 50px;">
 <h1>{{ $product->name }}</h1>
