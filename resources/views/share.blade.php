@@ -256,7 +256,6 @@
 <div class="floating"></div>
 
 <div class="loading-container">
-    <div class="logo">{{ config('app.name') }}</div>
 
     <div class="loading-text pulse">Carregando produto, aguarde um momento...</div>
 
