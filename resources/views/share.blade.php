@@ -26,7 +26,6 @@
 <p><strong>Preço:</strong> R$ {{ number_format($product->price, 2, ',', '.') }}</p>
 <?php
     $product->images = json_decode($product->images);
-    dd('sdfsd');
 ?>
 @if(isset($product->images[0]))
     <img src="{{ $product->images[0]->url }}" alt="{{ $product->name }}" style="max-width: 400px; margin: 20px 0;">
