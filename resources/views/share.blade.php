@@ -30,16 +30,6 @@
     </script>
 </head>
 <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-<h1>{{ $product->name }}</h1>
-<p>{{ $product->description }}</p>
-<p><strong>Categoria:</strong> {{ $product->category->name ?? 'Sem categoria' }}</p>
-<p><strong>Preço:</strong> R$ {{ number_format($product->price, 2, ',', '.') }}</p>
-<?php
-    $product->images = json_decode($product->images);
-?>
-@if(isset($product->images[0]))
-    <img src="{{ $product->images[0]->url }}" alt="{{ $product->name }}" style="max-width: 400px; margin: 20px 0;">
-@endif
 
 <a href="{{ env('HOST_FRONT').'/product/'.$product->id }}"
    style="display:inline-block; padding: 15px 30px; background: #007BFF; color: #fff; text-decoration:none; border-radius: 6px; font-weight:bold;">
