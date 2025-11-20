@@ -49,10 +49,17 @@ class ProductController extends Controller
 
             $query->where(function ($qbuilder) use ($q) {
                 $qbuilder
-                    ->whereRaw("unaccent(lower(name)) LIKE unaccent(lower(?))", ["%{$q}%"])
-                    ->orWhereRaw("unaccent(lower(description)) LIKE unaccent(lower(?))", ["%{$q}%"]);
+                    ->whereRaw(
+                        "immutable_unaccent(lower(name::text)) LIKE immutable_unaccent(lower(?))",
+                        ["%{$q}%"]
+                    )
+                    ->orWhereRaw(
+                        "immutable_unaccent(lower(description::text)) LIKE immutable_unaccent(lower(?))",
+                        ["%{$q}%"]
+                    );
             });
         }
+
 
 
 
