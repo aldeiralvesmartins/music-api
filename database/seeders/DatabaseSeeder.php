@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Company;
 use App\Models\Image;
 use App\Models\LayoutSection;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -17,37 +20,109 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(CompanySeeder::class);
-        $companyId = app('company_id');
+        // Limpar dados existentes
+        DB::table('users')->delete();
+        DB::table('products')->delete();
+        DB::table('categories')->delete();
+        DB::table('companies')->delete();
+        DB::table('layout_sections')->delete();
+        DB::table('images')->delete();
+        DB::table('store_settings')->delete();
 
-        // ---- CATEGORIAS ----
+        // Criar as duas companhias
+        $companies = [
+            [
+                'id' => 'COMP_' . Str::random(19),
+                'name' => 'Fashion Store - Loja 1',
+                'slug' => 'fashion-store',
+                'domain' => 'loja1.localhost',
+                'description' => 'Loja de roupas e acessórios fashion',
+                'industry' => 'Moda',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 'COMP_' . Str::random(19),
+                'name' => 'Confeitaria Doce Sabor - Loja 2',
+                'slug' => 'confeitaria-doce-sabor',
+                'domain' => 'loja2.localhost',
+                'description' => 'Confeitaria especializada em bolos e doces finos',
+                'industry' => 'Alimentação',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ];
+
+        foreach ($companies as $company) {
+            DB::table('companies')->insert($company);
+        }
+
+        // Semear dados para cada companhia
+        $this->call([
+            CompanyDataSeeder::class,
+        ]);
+    }
+}
+
+class CompanyDataSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $companies = Company::all();
+
+        foreach ($companies as $company) {
+            // Configurar o contexto da companhia atual
+            app()->instance('company_id', $company->id);
+            app()->instance('company', $company);
+
+            if ($company->industry === 'Moda') {
+                $this->seedFashionStore($company);
+            } else {
+                $this->seedConfeitaria($company);
+            }
+        }
+    }
+
+    private function seedFashionStore(Company $company): void
+    {
+        // ---- ADMIN PARA MODA ----
+        $adminId = $this->createAdminUser($company, 'admin@loja1.com', 'Admin Loja 1', '70373047193');
+
+        // ---- STORE SETTINGS PARA MODA ----
+        $this->seedFashionStoreSettings($company, $adminId);
+
+        // ---- CATEGORIAS PARA MODA ----
         $categories = [
-            ['id' => Str::random(24), 'name' => 'Camisetas', 'slug' => 'camisetas', 'description' => 'Camisetas básicas, estampadas e temáticas para todos os estilos', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Calças', 'slug' => 'calcas', 'description' => 'Jeans, sarja, leggings e calças casuais', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Camisas', 'slug' => 'camisas', 'description' => 'Camisas sociais, polo e casuais', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Bermudas', 'slug' => 'bermudas', 'description' => 'Bermudas jeans, sarja e esportivas', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Blusas', 'slug' => 'blusas', 'description' => 'Blusas femininas, regatas e mangas longas', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Vestidos', 'slug' => 'vestidos', 'description' => 'Vestidos curtos, longos e casuais', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Saias', 'slug' => 'saias', 'description' => 'Saias jeans, evasê e midi', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Casacos', 'slug' => 'casacos', 'description' => 'Jaquetas, moletons e blazers', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Tênis', 'slug' => 'tenis', 'description' => 'Tênis casuais, esportivos e lifestyle', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Sapatos', 'slug' => 'sapatos', 'description' => 'Sapatos sociais, mocassim e oxford', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Sandálias', 'slug' => 'sandalias', 'description' => 'Sandálias femininas, rasteiras e plataformas', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Bolsas', 'slug' => 'bolsas', 'description' => 'Bolsas de couro, totô e carteiras', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Acessórios', 'slug' => 'acessorios', 'description' => 'Cintos, óculos, bonés e relógios', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Roupas Íntimas', 'slug' => 'roupas-intimas', 'description' => 'Calcinhas, cuecas e pijamas', 'is_active' => true, 'company_id' => $companyId],
-            ['id' => Str::random(24), 'name' => 'Esportivo', 'slug' => 'esportivo', 'description' => 'Roupas fitness e atividades esportivas', 'is_active' => true, 'company_id' => $companyId],
+            ['id' => Str::random(24), 'name' => 'Camisetas', 'slug' => 'camisetas', 'description' => 'Camisetas básicas, estampadas e temáticas para todos os estilos', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Calças', 'slug' => 'calcas', 'description' => 'Jeans, sarja, leggings e calças casuais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Camisas', 'slug' => 'camisas', 'description' => 'Camisas sociais, polo e casuais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Bermudas', 'slug' => 'bermudas', 'description' => 'Bermudas jeans, sarja e esportivas', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Blusas', 'slug' => 'blusas', 'description' => 'Blusas femininas, regatas e mangas longas', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Vestidos', 'slug' => 'vestidos', 'description' => 'Vestidos curtos, longos e casuais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Saias', 'slug' => 'saias', 'description' => 'Saias jeans, evasê e midi', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Casacos', 'slug' => 'casacos', 'description' => 'Jaquetas, moletons e blazers', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Tênis', 'slug' => 'tenis', 'description' => 'Tênis casuais, esportivos e lifestyle', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Sapatos', 'slug' => 'sapatos', 'description' => 'Sapatos sociais, mocassim e oxford', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Sandálias', 'slug' => 'sandalias', 'description' => 'Sandálias femininas, rasteiras e plataformas', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Bolsas', 'slug' => 'bolsas', 'description' => 'Bolsas de couro, totô e carteiras', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Acessórios', 'slug' => 'acessorios', 'description' => 'Cintos, óculos, bonés e relógios', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Roupas Íntimas', 'slug' => 'roupas-intimas', 'description' => 'Calcinhas, cuecas e pijamas', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Esportivo', 'slug' => 'esportivo', 'description' => 'Roupas fitness e atividades esportivas', 'is_active' => true],
         ];
 
         foreach ($categories as $category) {
+            $category['company_id'] = $company->id;
             DB::table('categories')->insert($category);
         }
 
-        // ---- PRODUTOS ----
+        // ---- PRODUTOS PARA MODA ----
         $products = [];
+        $categoryIds = DB::table('categories')->where('company_id', $company->id)->pluck('id')->toArray();
 
         // Função para gerar produtos em lote
-        $generateProducts = function($categoryIndex, $count, $nameTemplate, $priceRange, $descriptionTemplate) use (&$products, $categories, $companyId) {
+        $generateProducts = function($categoryIndex, $count, $nameTemplate, $priceRange, $descriptionTemplate) use (&$products, $categories, $company) {
             for ($i = 1; $i <= $count; $i++) {
                 $products[] = [
                     'id' => Str::random(24),
@@ -59,120 +134,24 @@ class DatabaseSeeder extends Seeder
                     'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'company_id' => $companyId,
+                    'company_id' => $company->id,
                 ];
             }
         };
 
-        // Camisetas (50 produtos)
-        $generateProducts(0, 50, 'Camiseta Básica Cotton %d', [29.90, 79.90],
-            'Camiseta 100%% algodão, modelo %d. Tecido macio e respirável, perfeita para o dia a dia. Disponível em diversas cores.');
+        // Camisetas (20 produtos)
+        $generateProducts(0, 20, 'Camiseta Básica Cotton %d', [29.90, 79.90], 'Camiseta 100%% algodão, modelo %d. Tecido macio e respirável, perfeita para o dia a dia. Disponível em diversas cores.');
+        $generateProducts(0, 10, 'Camiseta Estampada Urban %d', [49.90, 99.90], 'Camiseta com estampa exclusiva urban %d. Design moderno e jovial, ideal para compor looks casuais e descolados.');
 
-        $generateProducts(0, 30, 'Camiseta Estampada Urban %d', [49.90, 99.90],
-            'Camiseta com estampa exclusiva urban %d. Design moderno e jovial, ideal para compor looks casuais e descolados.');
+        // Calças (15 produtos)
+        $generateProducts(1, 10, 'Calça Jeans Slim Fit %d', [89.90, 189.90], 'Calça jeans slim fit modelo %d. Com elastano para melhor conforto e mobilidade. Perfeita para looks casuais.');
+        $generateProducts(1, 5, 'Calça Sarja Cargo %d', [79.90, 159.90], 'Calça sarja cargo modelo %d. Bolsos funcionais e tecido resistente. Ideal para dia a dia e atividades urbanas.');
 
-        // Calças (40 produtos)
-        $generateProducts(1, 25, 'Calça Jeans Slim Fit %d', [89.90, 189.90],
-            'Calça jeans slim fit modelo %d. Com elastano para melhor conforto e mobilidade. Perfeita para looks casuais.');
+        // Camisas (10 produtos)
+        $generateProducts(2, 7, 'Camisa Social Slim %d', [99.90, 229.90], 'Camisa social slim fit modelo %d. Tecido de alta qualidade, perfeita para o ambiente corporativo e ocasiões especiais.');
+        $generateProducts(2, 3, 'Camisa Polo Premium %d', [79.90, 169.90], 'Camisa polo premium modelo %d. Acabamento impecável e toque suave. Ideal para looks smart casual.');
 
-        $generateProducts(1, 15, 'Calça Sarja Cargo %d', [79.90, 159.90],
-            'Calça sarja cargo modelo %d. Bolsos funcionais e tecido resistente. Ideal para dia a dia e atividades urbanas.');
-
-        // Camisas (35 produtos)
-        $generateProducts(2, 20, 'Camisa Social Slim %d', [99.90, 229.90],
-            'Camisa social slim fit modelo %d. Tecido de alta qualidade, perfeita para o ambiente corporativo e ocasiões especiais.');
-
-        $generateProducts(2, 15, 'Camisa Polo Premium %d', [79.90, 169.90],
-            'Camisa polo premium modelo %d. Acabamento impecável e toque suave. Ideal para looks smart casual.');
-
-        // Bermudas (30 produtos)
-        $generateProducts(3, 20, 'Bermuda Jeans %d', [59.90, 129.90],
-            'Bermuda jeans modelo %d. Corte moderno e confortável, perfeita para o verão e dias quentes.');
-
-        $generateProducts(3, 10, 'Bermuda Sarja %d', [49.90, 109.90],
-            'Bermuda sarja modelo %d. Tecido leve e versátil, ideal para momentos de lazer e descanso.');
-
-        // Blusas (40 produtos)
-        $generateProducts(4, 25, 'Blusa Feminina Manga Longa %d', [39.90, 119.90],
-            'Blusa feminina manga longa modelo %d. Tecido leve e aconchegante, perfeita para diversas ocasiões.');
-
-        $generateProducts(4, 15, 'Blusa Regata Alcinha %d', [29.90, 89.90],
-            'Blusa regata alcinha modelo %d. Ideal para dias quentes e composição de looks despojados.');
-
-        // Vestidos (35 produtos)
-        $generateProducts(5, 20, 'Vestido Midi Floral %d', [79.90, 199.90],
-            'Vestido midi floral modelo %d. Tecido fluido e estampa delicada, perfeito para eventos especiais.');
-
-        $generateProducts(5, 15, 'Vestido Curto Casual %d', [59.90, 149.90],
-            'Vestido curto casual modelo %d. Confortável e versátil, ideal para o dia a dia e encontros informais.');
-
-        // Saias (25 produtos)
-        $generateProducts(6, 15, 'Saia Jeans %d', [49.90, 129.90],
-            'Saia jeans modelo %d. Corte moderno e versátil, combina com diversos tipos de looks.');
-
-        $generateProducts(6, 10, 'Saia Evasê %d', [69.90, 159.90],
-            'Saia evasê modelo %d. Caimento perfeito e movimento suave, ideal para composições elegantes.');
-
-        // Casacos (30 produtos)
-        $generateProducts(7, 20, 'Moletone Capuz %d', [89.90, 189.90],
-            'Moletone com capuz modelo %d. Confortável e quentinho, perfeito para dias frios e momentos de relaxamento.');
-
-        $generateProducts(7, 10, 'Jaqueta Jeans %d', [119.90, 249.90],
-            'Jaqueta jeans modelo %d. Peça atemporal e versátil, essencial para qualquer guarda-roupa.');
-
-        // Tênis (40 produtos)
-        $generateProducts(8, 25, 'Tênis Casual Lifestyle %d', [129.90, 299.90],
-            'Tênis casual lifestyle modelo %d. Conforto e estilo para o dia a dia, com design moderno e confortável.');
-
-        $generateProducts(8, 15, 'Tênis Esportivo Performance %d', [159.90, 399.90],
-            'Tênis esportivo performance modelo %d. Tecnologia de amortecimento e suporte para atividades físicas.');
-
-        // Sapatos (30 produtos)
-        $generateProducts(9, 20, 'Sapato Social Couro %d', [149.90, 349.90],
-            'Sapato social em couro legítimo modelo %d. Acabamento impecável para ocasiões formais e profissionais.');
-
-        $generateProducts(9, 10, 'Mocassim Confort %d', [129.90, 279.90],
-            'Mocassim confort modelo %d. Elegância e conforto para o dia a dia corporativo e eventos sociais.');
-
-        // Sandálias (25 produtos)
-        $generateProducts(10, 15, 'Sandália Rasteira %d', [39.90, 129.90],
-            'Sandália rasteira modelo %d. Confortável e versátil, perfeita para o verão e dias quentes.');
-
-        $generateProducts(10, 10, 'Sandália Plataforma %d', [79.90, 189.90],
-            'Sandália plataforma modelo %d. Design moderno e confortável, ideal para looks descolados.');
-
-        // Bolsas (25 produtos)
-        $generateProducts(11, 15, 'Bolsa Couro Legítimo %d', [99.90, 299.90],
-            'Bolsa em couro legítimo modelo %d. Design funcional e elegante, perfeita para o dia a dia.');
-
-        $generateProducts(11, 10, 'Carteira Feminina %d', [49.90, 149.90],
-            'Carteira feminina modelo %d. Múltiplos compartimentos e acabamento refinado.');
-
-        // Acessórios (30 produtos)
-        $generateProducts(12, 10, 'Cinto Couro %d', [29.90, 89.90],
-            'Cinto em couro legítimo modelo %d. Fivela moderna e durabilidade garantida.');
-
-        $generateProducts(12, 10, 'Óculos Solar Fashion %d', [79.90, 199.90],
-            'Óculos solar fashion modelo %d. Proteção UV e design moderno para compor seu look.');
-
-        $generateProducts(12, 10, 'Boné Adjust %d', [39.90, 99.90],
-            'Boné adjust modelo %d. Ajuste perfeito e design urbano para completar seu estilo.');
-
-        // Roupas Íntimas (25 produtos)
-        $generateProducts(13, 15, 'Kit Calcinhas Algodão %d', [49.90, 119.90],
-            'Kit com 3 calcinhas em algodão modelo %d. Conforto e respirabilidade para o dia a dia.');
-
-        $generateProducts(13, 10, 'Kit Cuecas Cotton %d', [59.90, 129.90],
-            'Kit com 3 cuecas cotton modelo %d. Conforto e qualidade para uso diário.');
-
-        // Esportivo (25 produtos)
-        $generateProducts(14, 15, 'Conjunto Esportivo Fitness %d', [89.90, 199.90],
-            'Conjunto esportivo fitness modelo %d. Tecido dry-fit e modelagem anatômica para atividades físicas.');
-
-        $generateProducts(14, 10, 'Legging Esportiva %d', [69.90, 159.90],
-            'Legging esportiva modelo %d. Compressão ideal e liberdade de movimento para exercícios.');
-
-        // Produtos premium/destaque (20 produtos especiais)
+        // Produtos premium/destaque (10 produtos especiais)
         $premiumProducts = [
             [
                 'name' => 'Jaqueta de Couro Legítimo Premium',
@@ -204,96 +183,6 @@ class DatabaseSeeder extends Seeder
                 'price' => 899.90,
                 'category_id' => $categories[2]['id'],
             ],
-            [
-                'name' => 'Conjunto de Malhas Cashmere',
-                'description' => 'Conjunto de malhas em cashmere puro. Conforto e sofisticação em peças atemporais.',
-                'price' => 759.90,
-                'category_id' => $categories[4]['id'],
-            ],
-            [
-                'name' => 'Sapato Oxford Artesanal',
-                'description' => 'Sapato oxford feito à mão. Acabamento em couro cordovão e sola de madeira.',
-                'price' => 699.90,
-                'category_id' => $categories[9]['id'],
-            ],
-            [
-                'name' => 'Jaqueta Bomber Limited',
-                'description' => 'Jaqueta bomber edição limitada. Tecido técnico com detalhes em couro e bordados exclusivos.',
-                'price' => 459.90,
-                'category_id' => $categories[7]['id'],
-            ],
-            [
-                'name' => 'Vestido Noiva Casual',
-                'description' => 'Vestido estilo noiva para cerimônias intimistas. Renda francesa e caimento perfeito.',
-                'price' => 1299.90,
-                'category_id' => $categories[5]['id'],
-            ],
-            [
-                'name' => 'Conjunto Terninho Executivo',
-                'description' => 'Conjunto terninho em linho italiano. Perfeito para executivas e ocasiões corporativas.',
-                'price' => 899.90,
-                'category_id' => $categories[2]['id'],
-            ],
-            [
-                'name' => 'Tênis Retro Collector',
-                'description' => 'Reedição de tênis clássico dos anos 90. Design fiel aos originais com tecnologia atual.',
-                'price' => 399.90,
-                'category_id' => $categories[8]['id'],
-            ],
-            [
-                'name' => 'Bolsa Tote Executive',
-                'description' => 'Bolsa tote em couro estrutural. Compartimentos organizados para profissionais.',
-                'price' => 559.90,
-                'category_id' => $categories[11]['id'],
-            ],
-            [
-                'name' => 'Blazer Alfaiataria',
-                'description' => 'Blazer em corte de alfaiataria. Tecido inglês e acabamento impecável.',
-                'price' => 389.90,
-                'category_id' => $categories[7]['id'],
-            ],
-            [
-                'name' => 'Conjunto Pijama Seda',
-                'description' => 'Conjunto de pijama em seda natural. Conforto e elegância para noites especiais.',
-                'price' => 299.90,
-                'category_id' => $categories[13]['id'],
-            ],
-            [
-                'name' => 'Sandália Designer Heels',
-                'description' => 'Sandália de salto assinada por designer. Couro italiano e detalhes em cristal.',
-                'price' => 659.90,
-                'category_id' => $categories[10]['id'],
-            ],
-            [
-                'name' => 'Parka Inverno Térmica',
-                'description' => 'Parka térmica para inverno rigoroso. Impermeável e forro térmico premium.',
-                'price' => 789.90,
-                'category_id' => $categories[7]['id'],
-            ],
-            [
-                'name' => 'Conjunto Esportivo Tech',
-                'description' => 'Conjunto esportivo com tecnologia dry-fit avançada. Regulação de temperatura e compressão inteligente.',
-                'price' => 289.90,
-                'category_id' => $categories[14]['id'],
-            ],
-            [
-                'name' => 'Relógio Smart Fashion',
-                'description' => 'Relógio smart com design fashion. Tecnologia wearable e pulseiras intercambiáveis.',
-                'price' => 459.90,
-                'category_id' => $categories[12]['id'],
-            ],
-            [
-                'name' => 'Mala de Viagem Premium',
-                'description' => 'Mala de viagem em policarbonato. Rodas silenciosas e sistema de fechamento TSA.',
-                'price' => 899.90,
-                'category_id' => $categories[11]['id'],
-            ],
-            [
-                'name' => 'Kit Acessórios Premium',
-                'description' => 'Kit completo com cinto, carteira e porta-cartões em couro italiano.',
-                'price' => 399.90,
-                'category_id' => $categories[12]['id'],
-            ],
         ];
 
         foreach ($premiumProducts as $premium) {
@@ -307,49 +196,234 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-                'company_id' => $companyId,
+                'company_id' => $company->id,
             ];
         }
 
-        // Inserir todos os produtos no banco
+        // Inserir produtos
         foreach ($products as $product) {
             DB::table('products')->insert($product);
         }
 
-        // ---- IMAGENS PARA OS PRODUTOS ----
-        $productIds = DB::table('products')->pluck('id')->toArray();
+        // ---- IMAGENS PARA MODA ----
+        $this->seedProductImages($company);
+
+        // ---- LAYOUT COMPLETO PARA MODA ----
+        $this->seedFashionLayout($company, $categoryIds);
+
+        $this->command->info("Dados da Loja de Moda ({$company->name}) criados com sucesso!");
+    }
+
+    private function seedConfeitaria(Company $company): void
+    {
+        // ---- ADMIN PARA CONFEITARIA ----
+        $adminId = $this->createAdminUser($company, 'admin@loja2.com', 'Admin Confeitaria', '70373047194');
+
+        // ---- STORE SETTINGS PARA CONFEITARIA ----
+        $this->seedConfeitariaStoreSettings($company, $adminId);
+
+        // ---- CATEGORIAS PARA CONFEITARIA ----
+        $categories = [
+            ['id' => Str::random(24), 'name' => 'Bolos Caseiros', 'slug' => 'bolos-caseiros', 'description' => 'Bolos tradicionais e caseiros feitos com carinho', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Bolos Decorados', 'slug' => 'bolos-decorados', 'description' => 'Bolos para festas e eventos especiais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Doces Finos', 'slug' => 'doces-finos', 'description' => 'Doces sofisticados para ocasiões especiais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Tortas Doces', 'slug' => 'tortas-doces', 'description' => 'Tortas doces e sobremesas', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Cupcakes', 'slug' => 'cupcakes', 'description' => 'Cupcakes decorados e temáticos', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Brownies', 'slug' => 'brownies', 'description' => 'Brownies tradicionais e especiais', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Pães Doces', 'slug' => 'paes-doces', 'description' => 'Pães doces e massas folhadas', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Salgados', 'slug' => 'salgados', 'description' => 'Salgados para festas e eventos', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Doces de Copo', 'slug' => 'doces-de-copo', 'description' => 'Sobremesas individuais em copos', 'is_active' => true],
+            ['id' => Str::random(24), 'name' => 'Kits Festa', 'slug' => 'kits-festa', 'description' => 'Kits completos para festas e eventos', 'is_active' => true],
+        ];
+
+        foreach ($categories as $category) {
+            $category['company_id'] = $company->id;
+            DB::table('categories')->insert($category);
+        }
+
+        // ---- PRODUTOS PARA CONFEITARIA ----
+        $products = [
+            // Bolos Caseiros
+            ['id' => Str::random(24), 'name' => 'Bolo de Chocolate Tradicional', 'description' => 'Bolo de chocolate fofinho com cobertura de chocolate', 'price' => 45.90, 'category_id' => $categories[0]['id'], 'stock' => 10, 'is_active' => true, 'company_id' => $company->id],
+            ['id' => Str::random(24), 'name' => 'Bolo de Cenoura com Cobertura', 'description' => 'Bolo de cenoura úmido com cobertura de chocolate', 'price' => 42.90, 'category_id' => $categories[0]['id'], 'stock' => 8, 'is_active' => true, 'company_id' => $company->id],
+            ['id' => Str::random(24), 'name' => 'Bolo de Fubá Cremoso', 'description' => 'Bolo de fubá cremoso tradicional', 'price' => 38.90, 'category_id' => $categories[0]['id'], 'stock' => 12, 'is_active' => true, 'company_id' => $company->id],
+
+            // Bolos Decorados
+            ['id' => Str::random(24), 'name' => 'Bolo de Aniversário Personalizado', 'description' => 'Bolo decorado conforme tema da festa', 'price' => 120.00, 'category_id' => $categories[1]['id'], 'stock' => 5, 'is_active' => true, 'company_id' => $company->id],
+            ['id' => Str::random(24), 'name' => 'Bolo Noivo/Noiva 3 Andares', 'description' => 'Bolo de casamento luxuoso com 3 andares', 'price' => 350.00, 'category_id' => $categories[1]['id'], 'stock' => 2, 'is_active' => true, 'company_id' => $company->id],
+
+            // Doces Finos
+            ['id' => Str::random(24), 'name' => 'Brigadeiro Gourmet', 'description' => 'Brigadeiro premium com chocolate belga', 'price' => 3.50, 'category_id' => $categories[2]['id'], 'stock' => 50, 'is_active' => true, 'company_id' => $company->id],
+            ['id' => Str::random(24), 'name' => 'Beijinho de Coco', 'description' => 'Doce de coco com leite condensado', 'price' => 3.00, 'category_id' => $categories[2]['id'], 'stock' => 40, 'is_active' => true, 'company_id' => $company->id],
+
+            // Tortas Doces
+            ['id' => Str::random(24), 'name' => 'Torta de Limão', 'description' => 'Torta de limão com massa crocante', 'price' => 52.90, 'category_id' => $categories[3]['id'], 'stock' => 7, 'is_active' => true, 'company_id' => $company->id],
+            ['id' => Str::random(24), 'name' => 'Torta Holandesa', 'description' => 'Torta com creme e chocolate', 'price' => 58.90, 'category_id' => $categories[3]['id'], 'stock' => 5, 'is_active' => true, 'company_id' => $company->id],
+
+            // Cupcakes
+            ['id' => Str::random(24), 'name' => 'Kit 6 Cupcakes Decorados', 'description' => '6 cupcakes com decoração temática', 'price' => 35.00, 'category_id' => $categories[4]['id'], 'stock' => 15, 'is_active' => true, 'company_id' => $company->id],
+
+            // Brownies
+            ['id' => Str::random(24), 'name' => 'Brownie de Chocolate com Nozes', 'description' => 'Brownie intenso com pedaços de nozes', 'price' => 12.90, 'category_id' => $categories[5]['id'], 'stock' => 25, 'is_active' => true, 'company_id' => $company->id],
+
+            // Kits Festa
+            ['id' => Str::random(24), 'name' => 'Kit Festa Completo (20 pessoas)', 'description' => 'Bolo, doces e salgados para 20 pessoas', 'price' => 299.90, 'category_id' => $categories[9]['id'], 'stock' => 4, 'is_active' => true, 'company_id' => $company->id],
+        ];
+
+        foreach ($products as $product) {
+            $product['created_at'] = now();
+            $product['updated_at'] = now();
+            DB::table('products')->insert($product);
+        }
+
+        // ---- IMAGENS PARA CONFEITARIA ----
+        $this->seedConfeitariaImages($company);
+
+        // ---- LAYOUT COMPLETO PARA CONFEITARIA ----
+        $this->seedConfeitariaLayout($company);
+
+        $this->command->info("Dados da Confeitaria ({$company->name}) criados com sucesso!");
+    }
+
+    private function seedFashionStoreSettings(Company $company, string $adminId): void
+    {
+        $storeSettings = [
+            [
+                'id' => 'STORE_' . Str::random(20),
+                'user_id' => $adminId,
+                'store_name' => 'Fashion Store',
+                'primary_color' => '#3B82F6',
+                'secondary_color' => '#1E40AF',
+                'background_color' => '#FFFFFF',
+                'text_color' => '#1F2937',
+                'font_family' => 'Inter, sans-serif',
+                'logo_url' => 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80',
+                'favicon_url' => 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?ixlib=rb-4.0.1&auto=format&fit=crop&w=32&q=80',
+                'custom_css' => '/* Custom CSS for Fashion Store */',
+                'custom_js' => '// Custom JS for Fashion Store',
+                'is_active' => false,
+                'company_id' => $company->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 'STORE_' . Str::random(20),
+                'user_id' => $adminId,
+                'store_name' => 'Fashion Store - Configurações de Layout',
+                'primary_color' => '#EC4899',
+                'secondary_color' => '#BE185D',
+                'background_color' => '#FDF2F8',
+                'text_color' => '#1F2937',
+                'font_family' => 'Poppins, sans-serif',
+                'logo_url' => 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80',
+                'favicon_url' => 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?ixlib=rb-4.0.1&auto=format&fit=crop&w=32&q=80',
+                'custom_css' => '.hero-section { background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%); }',
+                'custom_js' => 'console.log("Fashion Store JS loaded");',
+                'is_active' => false,
+                'company_id' => $company->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 'STORE_' . Str::random(20),
+                'user_id' => $adminId,
+                'store_name' => 'Fashion Store - Configurações de Tema',
+                'primary_color' => '#8B5CF6',
+                'secondary_color' => '#7C3AED',
+                'background_color' => '#FAF5FF',
+                'text_color' => '#1F2937',
+                'font_family' => 'Montserrat, sans-serif',
+                'logo_url' => 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80',
+                'favicon_url' => 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?ixlib=rb-4.0.1&auto=format&fit=crop&w=32&q=80',
+                'custom_css' => '.btn-primary { background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); border: none; }',
+                'custom_js' => '// Fashion Store theme customization',
+                'is_active' => true,
+                'company_id' => $company->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ];
+
+        foreach ($storeSettings as $setting) {
+            DB::table('store_settings')->insert($setting);
+        }
+    }
+
+    private function seedConfeitariaStoreSettings(Company $company, string $adminId): void
+    {
+        $storeSettings = [
+            [
+                'id' => 'STORE_' . Str::random(20),
+                'user_id' => $adminId,
+                'store_name' => 'Confeitaria Doce Sabor',
+                'primary_color' => '#F59E0B',
+                'secondary_color' => '#D97706',
+                'background_color' => '#FFFBEB',
+                'text_color' => '#1F2937',
+                'font_family' => 'Dancing Script, cursive',
+                'logo_url' => 'https://images.unsplash.com/photo-1555507036-ab794f27d2e9?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80',
+                'favicon_url' => 'https://images.unsplash.com/photo-1555507036-ab794f27d2e9?ixlib=rb-4.0.1&auto=format&fit=crop&w=32&q=80',
+                'custom_css' => '/* Custom CSS for Confeitaria */',
+                'custom_js' => '// Custom JS for Confeitaria',
+                'is_active' => false,
+                'company_id' => $company->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 'STORE_' . Str::random(20),
+                'user_id' => $adminId,
+                'store_name' => 'Confeitaria Doce Sabor - Tema Doce',
+                'primary_color' => '#EC4899',
+                'secondary_color' => '#BE185D',
+                'background_color' => '#FDF2F8',
+                'text_color' => '#1F2937',
+                'font_family' => 'Pacifico, cursive',
+                'logo_url' => 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80',
+                'favicon_url' => 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.1&auto=format&fit=crop&w=32&q=80',
+                'custom_css' => '.hero-section { background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%); color: white; }',
+                'custom_js' => 'console.log("Confeitaria Doce Sabor JS loaded");',
+                'is_active' => false,
+                'company_id' => $company->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 'STORE_' . Str::random(20),
+                'user_id' => $adminId,
+                'store_name' => 'Confeitaria Doce Sabor - Tema Clássico',
+                'primary_color' => '#A78BFA',
+                'secondary_color' => '#8B5CF6',
+                'background_color' => '#F5F3FF',
+                'text_color' => '#1F2937',
+                'font_family' => 'Playfair Display, serif',
+                'logo_url' => 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.1&auto=format&fit=crop&w=200&q=80',
+                'favicon_url' => 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.1&auto=format&fit=crop&w=32&q=80',
+                'custom_css' => '.btn-primary { background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); border: none; border-radius: 25px; }',
+                'custom_js' => '// Confeitaria classic theme customization',
+                'is_active' => true,
+                'company_id' => $company->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ];
+
+        foreach ($storeSettings as $setting) {
+            DB::table('store_settings')->insert($setting);
+        }
+    }
+
+    private function seedProductImages(Company $company): void
+    {
+        $productIds = DB::table('products')->where('company_id', $company->id)->pluck('id')->toArray();
         $imageUrls = [
-            // Camisetas
             'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
             'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
             'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-
-            // Calças
             'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
             'https://images.unsplash.com/photo-1582418702059-97ebafb35d09?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-
-            // Camisas
-            'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-
-            // Vestidos
-            'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1595777457583-95e059d581b8?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-
-            // Tênis
-            'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-
-            // Bolsas
-            'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1584917865442-de89df76afd3?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-
-            // Acessórios
-            'https://images.unsplash.com/photo-1582142306909-195724d1a6ec?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
         ];
 
-        // Adicionar 2-3 imagens para cada produto
         foreach ($productIds as $productId) {
             $randomImages = array_rand($imageUrls, rand(2, 3));
             if (!is_array($randomImages)) {
@@ -360,28 +434,41 @@ class DatabaseSeeder extends Seeder
                     'url' => $imageUrls[$imageIndex],
                     'imageable_type' => 'App\Models\Product',
                     'imageable_id' => $productId,
+                    'company_id' => $company->id,
                 ]);
             }
         }
+    }
 
-        // ---- ADMIN ----
-        DB::table('users')->insert([
-            'id' => Str::random(24),
-            'name' => 'Administrador',
-            'email' => 'deirnogrc7@gmail.com',
-            'password' => Hash::make('12345678'),
-            'type' => 'admin',
-            'is_admin' => true,
-            'taxpayer' => '70373047193',
-            'company_id' => $companyId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+    private function seedConfeitariaImages(Company $company): void
+    {
+        $productIds = DB::table('products')->where('company_id', $company->id)->pluck('id')->toArray();
+        $imageUrls = [
+            'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1555507036-ab794f27d2e9?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+        ];
 
-        // Busca todos os IDs das categorias existentes no banco
-        $categoryIds = Category::pluck('id')->toArray();
+        foreach ($productIds as $productId) {
+            $randomImages = array_rand($imageUrls, rand(2, 3));
+            if (!is_array($randomImages)) {
+                $randomImages = [$randomImages];
+            }
+            foreach ($randomImages as $imageIndex) {
+                Image::create([
+                    'url' => $imageUrls[$imageIndex],
+                    'imageable_type' => 'App\Models\Product',
+                    'imageable_id' => $productId,
+                    'company_id' => $company->id,
+                ]);
+            }
+        }
+    }
 
-        // Define os layouts atualizados
+    private function seedFashionLayout(Company $company, array $categoryIds): void
+    {
         $layoutSections = [
             [
                 'id' => 'LAYO_MNlzmnxZqRSpF5Ef16h',
@@ -490,21 +577,148 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        // Insere no banco
         foreach ($layoutSections as $section) {
-            LayoutSection::create([
-                'id' => $section['id'],
-                'name' => $section['name'],
-                'title' => $section['title'],
-                'type' => $section['type'],
-                'content' => $section['content'],
-                'position' => $section['position'],
-                'is_active' => $section['is_active'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $section['company_id'] = $company->id;
+            $section['created_at'] = now();
+            $section['updated_at'] = now();
+            LayoutSection::create($section);
         }
+    }
 
-        $this->call(StoreSettingsSeeder::class);
+    private function seedConfeitariaLayout(Company $company): void
+    {
+        $categoryIds = DB::table('categories')->where('company_id', $company->id)->pluck('id')->toArray();
+
+        $layoutSections = [
+            [
+                'id' => 'LAYO_CONF_' . Str::random(16),
+                'name' => 'hero_principal',
+                'title' => 'Hero Confeitaria',
+                'type' => 'hero',
+                'content' => [
+                    'badge' => 'Doces Artesanais',
+                    'title' => 'Confeitaria Doce Sabor',
+                    'title_emphasis' => 'Sabor Inesquecível',
+                    'subtitle' => 'Bolos, doces finos e sobremesas feitas com ingredientes selecionados',
+                    'images' => [
+                        'https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+                        'https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80',
+                    ],
+                    'ctas' => [
+                        ['label' => 'Ver Cardápio', 'to' => '/#produtos'],
+                        ['label' => 'Encomendar', 'action' => 'open_orders', 'variant' => 'secondary'],
+                    ],
+                    'stats' => [
+                        ['value' => '50+', 'label' => 'Sabores'],
+                        ['value' => '10', 'label' => 'Categorias'],
+                        ['value' => '48h', 'label' => 'Encomenda'],
+                    ],
+                ],
+                'position' => 1,
+                'is_active' => true,
+            ],
+            [
+                'id' => 'LAYO_CONF_' . Str::random(16),
+                'name' => 'produtos_mais_vendidos',
+                'title' => 'Mais Pedidos',
+                'type' => 'produtos',
+                'content' => [
+                    'badge' => 'Destaques',
+                    'title' => 'Os Mais Pedidos',
+                    'subtitle' => 'Doces mais amados pelos nossos clientes',
+                    'show_category_filters' => true,
+                    'category_ids' => $categoryIds,
+                    'limit' => 8,
+                ],
+                'position' => 2,
+                'is_active' => true,
+            ],
+            [
+                'id' => 'LAYO_CONF_' . Str::random(16),
+                'name' => 'banner_galeria',
+                'title' => 'Nossas Criações',
+                'type' => 'pictures',
+                'content' => [
+                    'title' => 'Nossas Especialidades',
+                    'subtitle' => 'Doces feitos com carinho e qualidade',
+                    'images' => [
+                        ['src' => 'https://images.unsplash.com/photo-1555507036-ab794f27d2e9?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80', 'title' => 'Bolos Decorados'],
+                        ['src' => 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80', 'caption' => 'Doces Finos'],
+                        ['src' => 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80', 'title' => 'Tortas Especiais'],
+                        ['src' => 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.1&auto=format&fit=crop&w=800&q=80', 'caption' => 'Cupcakes Temáticos'],
+                    ],
+                ],
+                'position' => 3,
+                'is_active' => true,
+            ],
+            [
+                'id' => 'LAYO_CONF_' . Str::random(16),
+                'name' => 'cta_principal',
+                'title' => 'cta',
+                'type' => 'cta',
+                'content' => [
+                    'title' => 'Pronto para adoçar seu dia?',
+                    'subtitle' => 'Faça sua encomenda e surpreenda-se com nossos sabores!',
+                    'ctas' => [
+                        ['label' => 'Fazer Encomenda', 'to' => '/products'],
+                        ['label' => 'Ver Cardápio', 'to' => '/categories', 'variant' => 'secondary'],
+                    ],
+                    'bullets' => [
+                        'Encomenda com 48h de antecedência',
+                        'Ingredientes selecionados',
+                        'Entrega gratuita na região',
+                    ],
+                ],
+                'position' => 4,
+                'is_active' => true,
+            ],
+            [
+                'id' => 'LAYO_CONF_' . Str::random(16),
+                'name' => 'features',
+                'title' => 'features',
+                'type' => 'features',
+                'content' => [
+                    "title" => "Por que escolher nossa confeitaria?",
+                    "subtitle" => "Tudo que você precisa para momentos especiais",
+                    "items" => [
+                        ["icon" => "star", "title" => "Qualidade Premium", "description" => "Ingredientes selecionados e receitas exclusivas"],
+                        ["icon" => "clock", "title" => "Entrega Agendada", "description" => "Receba seus pedidos no horário combinado"],
+                        ["icon" => "heart", "title" => "Feito com Amor", "description" => "Cada doce preparado com carinho e dedicação"],
+                        ["icon" => "award", "title" => "Tradição", "description" => "Anos de experiência em confeitaria artesanal"],
+                        ["icon" => "users", "title" => "Atendimento Personalizado", "description" => "Ajudamos a criar o doce perfeito para sua ocasião"],
+                        ["icon" => "phone", "title" => "Facilidade", "description" => "Encomendas por WhatsApp ou site"],
+                    ]
+                ],
+                'position' => 5,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($layoutSections as $section) {
+            $section['company_id'] = $company->id;
+            $section['created_at'] = now();
+            $section['updated_at'] = now();
+            LayoutSection::create($section);
+        }
+    }
+
+    private function createAdminUser(Company $company, string $email, string $name, string $taxpayer): string
+    {
+        $adminId = Str::random(24);
+
+        DB::table('users')->insert([
+            'id' => $adminId,
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make('12345678'),
+            'type' => 'admin',
+            'is_admin' => true,
+            'taxpayer' => $taxpayer,
+            'company_id' => $company->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $adminId;
     }
 }

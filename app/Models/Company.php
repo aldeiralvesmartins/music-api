@@ -19,8 +19,10 @@ class Company extends Model
         'slug',
         'domain',
         'type',
+        'industry',
         'owner_id',
         'is_active',
+        'description'
     ];
 
     public function owner()

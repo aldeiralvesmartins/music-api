@@ -16,6 +16,8 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
+        $companyId = app()->bound('company_id') ? app('company_id') : null;
+
         $stats = [
             'total_users' => User::count(),
             'total_products' => Product::count(),
@@ -28,6 +30,10 @@ class AdminController extends Controller
             'top_products' => DB::table('order_items')
                 ->select('products.name', DB::raw('SUM(order_items.quantity) as total_quantity'))
                 ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->when($companyId, function ($q) use ($companyId) {
+                    return $q->where('order_items.company_id', $companyId)
+                             ->where('products.company_id', $companyId);
+                })
                 ->groupBy('products.id', 'products.name')
                 ->orderBy('total_quantity', 'desc')
                 ->take(5)

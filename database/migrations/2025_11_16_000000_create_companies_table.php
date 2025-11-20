@@ -13,6 +13,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('domain')->unique();
+            $table->string('description');
+            $table->string('industry');
             $table->enum('type', ['subdomain', 'custom_domain'])->default('subdomain');
             $table->string('owner_id', 24)->nullable();
             $table->boolean('is_active')->default(true);
