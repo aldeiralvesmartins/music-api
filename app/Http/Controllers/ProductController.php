@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Normalizer;
 
 class ProductController extends Controller
 {
@@ -44,8 +45,16 @@ class ProductController extends Controller
             $query->where($query->getModel()->getTable() . '.company_id', $companyId);
         }
 
+
+
         if (!empty($validated['q'])) {
+
+            // 1 — Sanitiza entrada
             $q = $validated['q'];
+            $q = preg_replace('/[\x00-\x1F\x7F\xC2\xA0]/u', '', $q);
+            $q = Normalizer::normalize($q, Normalizer::FORM_D);
+            $q = preg_replace('/\pM/u', '', $q); // remove todos acentos
+            $q = strtolower($q);
 
             $query->where(function ($qbuilder) use ($q) {
                 $qbuilder
@@ -59,6 +68,7 @@ class ProductController extends Controller
                     );
             });
         }
+
 
 
 
