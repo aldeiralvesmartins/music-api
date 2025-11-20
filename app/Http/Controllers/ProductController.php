@@ -46,11 +46,15 @@ class ProductController extends Controller
 
         if (!empty($validated['q'])) {
             $q = $validated['q'];
+
             $query->where(function ($qbuilder) use ($q) {
-                $qbuilder->where('name', 'LIKE', "%{$q}%")
-                    ->orWhere('description', 'LIKE', "%{$q}%");
+                $qbuilder
+                    ->whereRaw("unaccent(lower(name)) LIKE unaccent(lower(?))", ["%{$q}%"])
+                    ->orWhereRaw("unaccent(lower(description)) LIKE unaccent(lower(?))", ["%{$q}%"]);
             });
         }
+
+
 
         if (!empty($validated['category_id'])) {
             $query->where('category_id', $validated['category_id']);
