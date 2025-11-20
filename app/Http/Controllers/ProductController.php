@@ -49,22 +49,24 @@ class ProductController extends Controller
 
         if (!empty($validated['q'])) {
 
-            // 1 — Sanitiza entrada
+            // 1 — Normaliza e remove acentos
             $q = $validated['q'];
-            $q = preg_replace('/[\x00-\x1F\x7F\xC2\xA0]/u', '', $q);
             $q = Normalizer::normalize($q, Normalizer::FORM_D);
-            $q = preg_replace('/\pM/u', '', $q); // remove todos acentos
-            $q = strtolower($q);
+            $q = preg_replace('/\pM/u', '', $q); // remove marcas de acento
+            $q = strtolower($q); // lowercase
+
+            // 2 — Adiciona curingas do LIKE
+            $q = "%{$q}%";
 
             $query->where(function ($qbuilder) use ($q) {
                 $qbuilder
                     ->whereRaw(
-                        "immutable_unaccent(lower(name::text)) LIKE immutable_unaccent(lower(?))",
-                        ["%{$q}%"]
+                        "immutable_unaccent(lower(name::text)) LIKE ?",
+                        [$q]
                     )
                     ->orWhereRaw(
-                        "immutable_unaccent(lower(description::text)) LIKE immutable_unaccent(lower(?))",
-                        ["%{$q}%"]
+                        "immutable_unaccent(lower(description::text)) LIKE ?",
+                        [$q]
                     );
             });
         }
