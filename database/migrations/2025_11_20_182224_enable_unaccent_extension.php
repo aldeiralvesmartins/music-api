@@ -5,24 +5,20 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        // Índice funcional no campo 'name' usando public.unaccent
-        DB::statement('
-            CREATE INDEX IF NOT EXISTS products_name_unaccent_idx
-            ON products ((public.unaccent(lower(name::text))));
-        ');
+        // Garante instalação da extensão no schema public
+        DB::statement("CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;");
 
-        // Índice funcional no campo 'description'
-        DB::statement('
-            CREATE INDEX IF NOT EXISTS products_description_unaccent_idx
-            ON products ((public.unaccent(lower(description::text))));
-        ');
+        // Índice funcional sem especificar schema
+        DB::statement("
+            CREATE INDEX IF NOT EXISTS products_name_unaccent_idx
+            ON products ((unaccent(lower(name))));
+        ");
     }
 
-    public function down(): void
+    public function down()
     {
-        DB::statement('DROP INDEX IF EXISTS products_name_unaccent_idx;');
-        DB::statement('DROP INDEX IF EXISTS products_description_unaccent_idx;');
+        DB::statement("DROP INDEX IF EXISTS products_name_unaccent_idx;");
     }
 };
