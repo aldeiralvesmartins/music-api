@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Ensure tenant middleware runs for all routes in 'web' and 'api' groups
-        $middleware->appendToGroup('web', \App\Http\Middleware\SetCompanyFromDomain::class);
+//        $middleware->appendToGroup('web', \App\Http\Middleware\SetCompanyFromDomain::class);
         $middleware->appendToGroup('api', \App\Http\Middleware\SetCompanyFromDomain::class);
     })
 
