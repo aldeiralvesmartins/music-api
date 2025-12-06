@@ -405,4 +405,35 @@ class SongController extends Controller
             ],
         ]);
     }
+
+    public function nextByCategory(Request $request, $category_id = null)
+    {
+        $token = $request->query('token');
+        if ($token) {
+            $decoded = json_decode(base64_decode($token), true) ?: [];
+            $request->merge([
+                'category_id' => $decoded['category_id'] ?? null,
+                'page' => ($decoded['page'] ?? 0) + 1,
+                'per_page' => $decoded['per_page'] ?? 30,
+                'ads_every' => $decoded['ads_every'] ?? 3,
+            ]);
+        }
+
+        $response = $this->byCategory($request, $category_id);
+
+        $page = (int) request('page', 1);
+        $perPage = (int) request('per_page', 30);
+        $adsEvery = (int) request('ads_every', 3);
+        $cat = $category_id ?? request('category_id');
+        $nextToken = base64_encode(json_encode([
+            'category_id' => $cat,
+            'page' => $page,
+            'per_page' => $perPage,
+            'ads_every' => $adsEvery,
+        ]));
+
+        $payload = $response->getData(true);
+        $payload['meta']['next_token'] = $nextToken;
+        return response()->json($payload);
+    }
 }
