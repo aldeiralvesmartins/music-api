@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     CompanyController,
     CategoryController,
     SongController,
-    UserController};
+    UserController,
+    PlaylistController};
 use App\Http\Controllers\Admin\AdminController;
 
 
@@ -28,11 +29,25 @@ Route::middleware('handler.exception')->group(function () {
         Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
         Route::prefix('songs')->group(function () {
             Route::get('/', [SongController::class, 'index']);           // Listar músicas
+            Route::get('/next', [SongController::class, 'next']);        // Próximo lote por token
             Route::post('/', [SongController::class, 'store']);          // Upload
             Route::get('by-category', [SongController::class, 'byCategory']); // Listar por categoria (query: category_id)
             Route::get('by-category/{category_id}', [SongController::class, 'byCategory'])->whereNumber('category_id'); // Listar por categoria (path param)
             Route::get('{id}', [SongController::class, 'show']);         // Ver dados da música
             Route::get('{id}/play', [SongController::class, 'play']);    // Tocar/baixar
+        });
+
+        // Playlists
+        Route::prefix('playlists')->group(function () {
+            Route::get('/', [PlaylistController::class, 'index']);
+            Route::post('/', [PlaylistController::class, 'store']);
+            Route::get('{id}', [PlaylistController::class, 'show']);
+            Route::put('{id}', [PlaylistController::class, 'update']);
+            Route::delete('{id}', [PlaylistController::class, 'destroy']);
+
+            Route::get('{id}/songs', [PlaylistController::class, 'listSongs']);
+            Route::post('{id}/songs', [PlaylistController::class, 'addSongs']);
+            Route::delete('{id}/songs/{songId}', [PlaylistController::class, 'removeSong']);
         });
         // Auth routes
         Route::post('/logout', [AuthController::class, 'logout']);
