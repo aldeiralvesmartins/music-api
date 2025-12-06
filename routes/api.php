@@ -32,7 +32,7 @@ Route::middleware('handler.exception')->group(function () {
             Route::get('/next', [SongController::class, 'next']);        // Próximo lote por token
             Route::post('/', [SongController::class, 'store']);          // Upload
             Route::get('by-category', [SongController::class, 'byCategory']); // Listar por categoria (query: category_id)
-            Route::get('by-category/{category_id}', [SongController::class, 'byCategory'])->whereNumber('category_id'); // Listar por categoria (path param)
+            Route::get('by-category/{category_id}', [SongController::class, 'byCategory']); // Listar por categoria (path param)
             Route::get('{id}', [SongController::class, 'show']);         // Ver dados da música
             Route::get('{id}/play', [SongController::class, 'play']);    // Tocar/baixar
         });

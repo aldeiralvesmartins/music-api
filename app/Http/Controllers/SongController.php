@@ -282,40 +282,127 @@ class SongController extends Controller
             'category_id' => 'required|exists:categories,id',
         ]);
 
-        $songs = Song::with('category')
+        $perPage = (int) request('per_page', 30);
+        $page = (int) request('page', 1);
+        $adsEvery = max(1, (int) request('ads_every', 3));
+
+        $perPage = $perPage > 0 ? min($perPage, 100) : 30;
+        $page = $page > 0 ? $page : 1;
+
+        $adsPerPage = intdiv($perPage, $adsEvery + 1);
+        $normalPerPage = $perPage - $adsPerPage;
+
+        $normal = Song::with('category')
+            ->where('anuncio', false)
             ->where('category_id', $data['category_id'])
-            ->get()
-            ->map(function ($song) {
-                $path = storage_path("app/public/songs/{$song->filename}");
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->offset(($page - 1) * $normalPerPage)
+            ->limit($normalPerPage)
+            ->get();
 
-                $size = round(filesize($path) / 1024 / 1024, 2);
+        $ads = Song::with('category')
+            ->where('anuncio', true)
+            ->where('category_id', $data['category_id'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->offset(($page - 1) * $adsPerPage)
+            ->limit($adsPerPage)
+            ->get();
 
-                $duration = null;
-                $cmd = "ffprobe -i " . escapeshellarg($path) . " -show_entries format=duration -v quiet -of csv=\"p=0\"";
-                $output = [];
-                exec($cmd, $output, $returnVar);
-                if ($returnVar === 0 && isset($output[0])) {
-                    $seconds = (float)$output[0];
-                    $duration = sprintf("%02d:%02d", floor($seconds / 60), $seconds % 60);
-                }
+        $interleaved = [];
+        $iN = 0; $iA = 0;
+        while (count($interleaved) < $perPage && ($iN < $normal->count() || $iA < $ads->count())) {
+            $addedNormal = 0;
+            while ($addedNormal < $adsEvery && count($interleaved) < $perPage && $iN < $normal->count()) {
+                $interleaved[] = $normal[$iN++];
+                $addedNormal++;
+            }
+            if (count($interleaved) < $perPage && $iA < $ads->count()) {
+                $interleaved[] = $ads[$iA++];
+            }
+        }
 
+        $mapped = collect($interleaved)->map(function ($song) {
+            $path = storage_path("app/public/songs/{$song->filename}");
+
+            if (!file_exists($path)) {
                 return [
                     'id'         => $song->id,
                     'title'      => $song->title,
                     'filename'   => $song->filename,
                     'url'        => $song->url,
+                    'cover_url'  => $song->cover_url,
+                    'anuncio'    => $song->anuncio,
                     'category'   => $song->category ? [
                         'id' => $song->category->id,
                         'name' => $song->category->name,
                     ] : null,
-                    'anuncio'    => $song->anuncio,
-                    'size_mb'    => $size,
-                    'duration'   => $duration,
+                    'size_mb'    => 0,
+                    'duration'   => '00:00',
                     'created_at' => $song->created_at,
                     'updated_at' => $song->updated_at,
+                    'error'      => 'Arquivo não encontrado'
                 ];
-            });
+            }
 
-        return response()->json($songs);
+            // Cache de metadados
+            $size = $song->size_mb;
+            $durationSeconds = $song->duration_seconds;
+
+            $dirty = false;
+            if ($size === null) {
+                $size = round(filesize($path) / 1024 / 1024, 2);
+                $song->size_mb = $size;
+                $dirty = true;
+            }
+            if ($durationSeconds === null) {
+                $cmd = "ffprobe -i " . escapeshellarg($path) . " -show_entries format=duration -v quiet -of csv=\"p=0\" 2>&1";
+                $out = [];
+                exec($cmd, $out, $ret);
+                if ($ret === 0 && isset($out[0])) {
+                    $durationSeconds = (int) round((float) $out[0]);
+                    $song->duration_seconds = $durationSeconds;
+                    $dirty = true;
+                }
+            }
+            if ($dirty) {
+                // Salva o cache sem disparar eventos pesados
+                $song->timestamps = false;
+                $song->saveQuietly();
+            }
+
+            $duration = $durationSeconds !== null
+                ? sprintf("%02d:%02d", floor($durationSeconds / 60), $durationSeconds % 60)
+                : '00:00';
+
+            return [
+                'id'         => $song->id,
+                'title'      => $song->title,
+                'filename'   => $song->filename,
+                'url'        => $song->url,
+                'cover_url'  => $song->cover_url,
+                'anuncio'    => $song->anuncio,
+                'category'   => $song->category ? [
+                    'id' => $song->category->id,
+                    'name' => $song->category->name,
+                ] : null,
+                'size_mb'    => $size,
+                'duration'   => $duration,
+                'created_at' => $song->created_at,
+                'updated_at' => $song->updated_at,
+            ];
+        });
+
+        return response()->json([
+            'data' => $mapped,
+            'meta' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'ads_every' => $adsEvery,
+                'category_id' => $data['category_id'],
+                'count' => $mapped->count(),
+            ],
+        ]);
     }
 }
