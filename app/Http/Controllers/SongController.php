@@ -14,48 +14,67 @@ class SongController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'file'  => 'required|mimes:mp3,wav,ogg,webm|max:10240',
-            'category_id' => 'required|exists:categories,id',
-        ]);
+        try {
+            // Validação
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'file'  => 'required|mimes:mp3,wav,ogg,webm|max:102400', // 100MB
+                'category_id' => 'required|exists:categories,id',
+            ]);
 
-        $file = $request->file('file');
-        $tmpPath = $file->getPathname();
+            $file = $request->file('file');
 
-        // Tamanho original
-        $originalSize = round(filesize($tmpPath) / 1024 / 1024, 2);
+            if (!$file->isValid()) {
+                return response()->json(['error' => 'Arquivo inválido ou corrompido.'], 422);
+            }
 
-        // Nome final
-        $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.mp3';
-        $finalPath = storage_path("app/public/songs/$filename");
+            $tmpPath = $file->getPathname();
+            $originalSize = round(filesize($tmpPath) / 1024 / 1024, 2);
 
-        if (!file_exists(storage_path('app/public/songs'))) {
-            mkdir(storage_path('app/public/songs'), 0755, true);
+            $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.mp3';
+            $finalPath = storage_path("app/public/songs/$filename");
+
+            if (!file_exists(storage_path('app/public/songs'))) {
+                if (!mkdir(storage_path('app/public/songs'), 0755, true)) {
+                    return response()->json(['error' => 'Não foi possível criar a pasta de músicas.'], 500);
+                }
+            }
+
+            // Executa o FFmpeg e captura saída
+            $cmd = "ffmpeg -i " . escapeshellarg($tmpPath) . " -b:a 128k " . escapeshellarg($finalPath) . " -y 2>&1";
+            exec($cmd, $output, $returnVar);
+
+            if ($returnVar !== 0) {
+                return response()->json([
+                    'error' => 'Falha ao comprimir a música.',
+                    'ffmpeg_output' => $output
+                ], 422);
+            }
+
+            $compressedSize = round(filesize($finalPath) / 1024 / 1024, 2);
+            $url = asset("storage/songs/$filename");
+
+            $song = Song::create([
+                'title'    => $request->title,
+                'filename' => $filename,
+                'url'      => $url,
+                'category_id' => $request->category_id,
+            ]);
+
+            return response()->json([
+                'message' => "Upload concluído! Original: {$originalSize}MB → Final: {$compressedSize}MB",
+                'song'    => $song,
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => 'Erro de validação', 'details' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Ocorreu um erro inesperado.',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTrace()
+            ], 500);
         }
-
-        // Converter/comprimir (FFmpeg)
-        $cmd = "ffmpeg -i " . escapeshellarg($tmpPath) . " -b:a 128k " . escapeshellarg($finalPath) . " -y";
-        exec($cmd, $output, $returnVar);
-
-        if ($returnVar !== 0) {
-            return response()->json(['error' => 'Falha ao comprimir a música.'], 422);
-        }
-
-        $compressedSize = round(filesize($finalPath) / 1024 / 1024, 2);
-        $url = asset("storage/songs/$filename");
-
-        $song = Song::create([
-            'title'    => $request->title,
-            'filename' => $filename,
-            'url'      => $url,
-            'category_id' => $request->category_id,
-        ]);
-
-        return response()->json([
-            'message' => "Upload concluído! Original: {$originalSize}MB → Final: {$compressedSize}MB",
-            'song'    => $song,
-        ], 201);
     }
 
     /**
