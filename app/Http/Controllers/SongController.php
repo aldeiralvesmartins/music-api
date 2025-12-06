@@ -96,9 +96,6 @@ class SongController extends Controller
     }
 
 
-    /**
-     * Listar todas as músicas
-     */
     public function index()
     {
         $songs = Song::with('category')->get()->map(function ($song) {
@@ -123,6 +120,7 @@ class SongController extends Controller
                 'title'      => $song->title,
                 'filename'   => $song->filename,
                 'url'        => $song->url,
+                'cover_url'  => $song->cover_url, // <-- Adicionado
                 'category'   => $song->category ? [
                     'id' => $song->category->id,
                     'name' => $song->category->name,
