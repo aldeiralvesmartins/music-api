@@ -33,7 +33,8 @@ class Category extends Model
         'name',
         'is_active',
         'slug',
-        'description'
+        'description',
+        'company_id',
     ];
 
     /**

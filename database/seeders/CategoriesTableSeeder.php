@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -329,9 +330,24 @@ class CategoriesTableSeeder extends Seeder
                 'is_active' => true,
             ],
         ];
+        $company = Company::latest()->first();
+
+        if (!$company) {
+            $this->command->error('Nenhuma empresa encontrada. Crie uma empresa antes de rodar esta seed.');
+            return;
+        }
 
         foreach ($categories as $category) {
-            DB::table('categories')->insert($category);
+            DB::table('categories')->insert([
+                'id' => $category['id'],
+                'name' => $category['name'],
+                'slug' => $category['slug'],
+                'description' => $category['description'],
+                'is_active' => true,
+                'company_id' => $company->id, // Passando o Company ID
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }
