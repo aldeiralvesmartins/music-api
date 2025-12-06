@@ -9,6 +9,8 @@ use Illuminate\Auth\AuthenticationException;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HandlerException
 {
@@ -21,7 +23,13 @@ class HandlerException
     {
         $response = $next($request);
 
-        if ($exception = $response->exception) {
+        // Do not attempt to wrap/transform binary or streamed responses
+        if ($response instanceof BinaryFileResponse || $response instanceof StreamedResponse) {
+            return $response;
+        }
+
+        // Safely access exception only if the property exists and is set
+        if (\property_exists($response, 'exception') && ($exception = $response->exception)) {
 //            debug($exception);
             // Se for um erro de validação
             if ($exception instanceof ValidationException) {

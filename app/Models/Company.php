@@ -16,19 +16,11 @@ class Company extends Model
     protected $fillable = [
         'id',
         'name',
-        'slug',
-        'domain',
-        'type',
         'industry',
-        'owner_id',
         'is_active',
         'description'
     ];
 
-    public function owner()
-    {
-        return $this->belongsTo(User::class, 'owner_id');
-    }
 
     public function users()
     {

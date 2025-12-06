@@ -49,8 +49,7 @@ class AdminController extends Controller
     public function listUsers(Request $request)
     {
         $perPage = $request->input('per_page', 15);
-        $users = User::withCount(['orders', 'addresses'])
-            ->latest()
+        $users = User::latest()
             ->paginate($perPage);
 
         return response()->json($users);

@@ -10,20 +10,8 @@ return new class extends Migration
     {
         $tables = [
             'users',
-            'products',
             'categories',
-            'addresses',
-            'carts',
-            'cart_items',
-            'cart_item_specifications',
-            'orders',
-            'order_items',
-            'payments',
-            'images',
-            'layout_sections',
-            'store_settings',
-            'user_integrations',
-            'product_specifications',
+            'images'
         ];
 
         foreach ($tables as $tableName) {
@@ -40,20 +28,8 @@ return new class extends Migration
     {
         $tables = [
             'users',
-            'products',
             'categories',
-            'addresses',
-            'carts',
-            'cart_items',
-            'cart_item_specifications',
-            'orders',
-            'order_items',
-            'payments',
-            'images',
-            'layout_sections',
-            'store_settings',
-            'user_integrations',
-            'product_specifications',
+            'images'
         ];
 
         foreach ($tables as $tableName) {

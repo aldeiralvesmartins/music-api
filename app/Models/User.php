@@ -23,29 +23,6 @@ class User extends Authenticatable
     protected $keyType = 'string';
 
     /**
-     * Get the addresses for the user.
-     */
-    public function addresses(): HasMany
-    {
-        return $this->hasMany(Address::class);
-    }
-
-    /**
-     * Get the default address for the user.
-     */
-    public function defaultAddress()
-    {
-        return $this->hasOne(Address::class)->where('is_default', true);
-    }
-
-    /**
-     * Get the orders for the user.
-     */
-    public function orders(): HasMany
-    {
-        return $this->hasMany(Order::class);
-    }
-    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -66,8 +43,6 @@ class User extends Authenticatable
         'customer_id',
         'company_id'
     ];
-
-    protected $with = ['addresses'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -95,27 +70,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    public function cartItems()
-    {
-        return $this->hasMany(CartItem::class);
-    }
-
-    /**
-     * User integrations (dynamic external providers)
-     */
-    public function integrations(): HasMany
-    {
-        return $this->hasMany(UserIntegration::class);
-    }
-
-    /**
-     * Store settings owned by the admin user
-     */
-    public function storeSettings(): HasMany
-    {
-        return $this->hasMany(StoreSetting::class);
     }
 
     public function company()

@@ -55,32 +55,4 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Password updated successfully.']);
     }
-
-    /**
-     * Get the user's orders.
-     */
-    public function orders(Request $request)
-    {
-        $orders = $request->user()
-            ->orders()
-            ->with(['items.product', 'address', 'payment'])
-            ->latest()
-            ->paginate(10);
-
-        return response()->json($orders);
-    }
-
-    /**
-     * Get the order details.
-     */
-    public function orderDetail(Order $order, Request $request)
-    {
-        if ($order->user_id !== $request->user()->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        return response()->json(
-            $order->load(['items.product', 'address', 'payment'])
-        );
-    }
 }

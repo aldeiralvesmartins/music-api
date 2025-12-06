@@ -15,12 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'handler.exception' => \App\Http\Middleware\HandlerException::class,
-            'tenant.domain' => \App\Http\Middleware\SetCompanyFromDomain::class,
         ]);
 
         // Ensure tenant middleware runs for all routes in 'web' and 'api' groups
 //        $middleware->appendToGroup('web', \App\Http\Middleware\SetCompanyFromDomain::class);
-        $middleware->appendToGroup('api', \App\Http\Middleware\SetCompanyFromDomain::class);
+//        $middleware->appendToGroup('api', \App\Http\Middleware\SetCompanyFromDomain::class);
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {

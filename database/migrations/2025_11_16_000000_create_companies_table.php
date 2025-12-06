@@ -11,16 +11,10 @@ return new class extends Migration
         Schema::create('companies', function (Blueprint $table) {
             $table->string('id', 24)->primary();
             $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('domain')->unique();
             $table->string('description');
             $table->string('industry');
-            $table->enum('type', ['subdomain', 'custom_domain'])->default('subdomain');
-            $table->string('owner_id', 24)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-
-            $table->foreign('owner_id')->references('id')->on('users')->nullOnDelete();
         });
     }
 

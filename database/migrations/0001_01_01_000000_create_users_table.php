@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('type'); //['client', 'freelancer']
+            $table->string('type')->default('client');
             $table->text('bio')->nullable();
             $table->json('portfolio')->nullable(); // array de links
             $table->string('photo')->nullable();
