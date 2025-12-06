@@ -33,8 +33,7 @@ class Category extends Model
         'name',
         'is_active',
         'slug',
-        'description',
-        'company_id',
+        'description'
     ];
 
     /**
@@ -51,10 +50,5 @@ class Category extends Model
     {
         parent::boot();
         static::creating(fn($model) => $model->id = CustomIdService::generateCustomId(get_class($model)));
-    }
-
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
     }
 }

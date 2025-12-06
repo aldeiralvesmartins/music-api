@@ -10,7 +10,6 @@ return new class extends Migration
     {
         $tables = [
             'users',
-            'categories',
             'images'
         ];
 
