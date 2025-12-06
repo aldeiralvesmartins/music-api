@@ -98,39 +98,62 @@ class SongController extends Controller
 
     public function index()
     {
-        $songs = Song::with('category')->get()->map(function ($song) {
-            $path = storage_path("app/public/songs/{$song->filename}");
+        $songs = Song::with('category')
+            ->inRandomOrder() // Adicione esta linha
+            ->get()
+            ->map(function ($song) {
+                $path = storage_path("app/public/songs/{$song->filename}");
 
-            // Tamanho do arquivo
-            $size = round(filesize($path) / 1024 / 1024, 2);
+                // Verifica se o arquivo existe
+                if (!file_exists($path)) {
+                    return [
+                        'id'         => $song->id,
+                        'title'      => $song->title,
+                        'filename'   => $song->filename,
+                        'url'        => $song->url,
+                        'cover_url'  => $song->cover_url,
+                        'category'   => $song->category ? [
+                            'id' => $song->category->id,
+                            'name' => $song->category->name,
+                        ] : null,
+                        'size_mb'    => 0,
+                        'duration'   => '00:00',
+                        'created_at' => $song->created_at,
+                        'updated_at' => $song->updated_at,
+                        'error'      => 'Arquivo não encontrado'
+                    ];
+                }
 
-            // Duração via ffprobe
-            $duration = null;
-            $cmd = "ffprobe -i " . escapeshellarg($path) . " -show_entries format=duration -v quiet -of csv=\"p=0\"";
-            $output = [];
-            exec($cmd, $output, $returnVar);
+                // Tamanho do arquivo
+                $size = round(filesize($path) / 1024 / 1024, 2);
 
-            if ($returnVar === 0 && isset($output[0])) {
-                $seconds = (float)$output[0];
-                $duration = sprintf("%02d:%02d", floor($seconds / 60), $seconds % 60);
-            }
+                // Duração via ffprobe
+                $duration = '00:00';
+                $cmd = "ffprobe -i " . escapeshellarg($path) . " -show_entries format=duration -v quiet -of csv=\"p=0\" 2>&1";
+                $output = [];
+                exec($cmd, $output, $returnVar);
 
-            return [
-                'id'         => $song->id,
-                'title'      => $song->title,
-                'filename'   => $song->filename,
-                'url'        => $song->url,
-                'cover_url'  => $song->cover_url, // <-- Adicionado
-                'category'   => $song->category ? [
-                    'id' => $song->category->id,
-                    'name' => $song->category->name,
-                ] : null,
-                'size_mb'    => $size,
-                'duration'   => $duration,
-                'created_at' => $song->created_at,
-                'updated_at' => $song->updated_at,
-            ];
-        });
+                if ($returnVar === 0 && isset($output[0])) {
+                    $seconds = (float)$output[0];
+                    $duration = sprintf("%02d:%02d", floor($seconds / 60), floor($seconds % 60));
+                }
+
+                return [
+                    'id'         => $song->id,
+                    'title'      => $song->title,
+                    'filename'   => $song->filename,
+                    'url'        => $song->url,
+                    'cover_url'  => $song->cover_url,
+                    'category'   => $song->category ? [
+                        'id' => $song->category->id,
+                        'name' => $song->category->name,
+                    ] : null,
+                    'size_mb'    => $size,
+                    'duration'   => $duration,
+                    'created_at' => $song->created_at,
+                    'updated_at' => $song->updated_at,
+                ];
+            });
 
         return response()->json($songs);
     }
