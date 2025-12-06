@@ -12,7 +12,7 @@ class Song extends Model
     public $incrementing = false; // porque o id é string
 
     protected $keyType = 'string';
-    protected $fillable = ['title', 'filename', 'url', 'category_id'];
+    protected $fillable = ['title', 'filename', 'url', 'cover_url', 'category_id'];
 
     public function category()
     {

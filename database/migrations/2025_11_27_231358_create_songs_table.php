@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('filename'); // nome do arquivo no storage
             $table->string('url'); // link público para escutar
+            $table->string('cover_url'); // link público para escutar
             $table->string('category_id', 24);
             $table->timestamps();
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

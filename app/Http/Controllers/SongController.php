@@ -34,13 +34,14 @@ class SongController extends Controller
             $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.mp3';
             $finalPath = storage_path("app/public/songs/$filename");
 
+            // Cria pasta se não existir
             if (!file_exists(storage_path('app/public/songs'))) {
                 if (!mkdir(storage_path('app/public/songs'), 0755, true)) {
                     return response()->json(['error' => 'Não foi possível criar a pasta de músicas.'], 500);
                 }
             }
 
-            // Executa o FFmpeg e captura saída
+            // Comprimir música com FFmpeg
             $cmd = "ffmpeg -i " . escapeshellarg($tmpPath) . " -b:a 128k " . escapeshellarg($finalPath) . " -y 2>&1";
             exec($cmd, $output, $returnVar);
 
@@ -54,10 +55,27 @@ class SongController extends Controller
             $compressedSize = round(filesize($finalPath) / 1024 / 1024, 2);
             $url = asset("storage/songs/$filename");
 
+            // --- Extrair capa do MP3 ---
+            $coverPath = storage_path("app/public/songs/covers/$filename.jpg");
+            if (!file_exists(dirname($coverPath))) {
+                mkdir(dirname($coverPath), 0755, true);
+            }
+
+            // FFmpeg para extrair a capa
+            $cmdCover = "ffmpeg -i " . escapeshellarg($tmpPath) . " -an -vcodec copy " . escapeshellarg($coverPath) . " 2>&1";
+            exec($cmdCover, $outputCover, $returnVarCover);
+
+            $coverUrl = null;
+            if ($returnVarCover === 0 && file_exists($coverPath)) {
+                $coverUrl = asset("storage/songs/covers/$filename.jpg");
+            }
+
+            // Salvar no banco
             $song = Song::create([
-                'title'    => $request->title,
-                'filename' => $filename,
-                'url'      => $url,
+                'title'       => $request->title,
+                'filename'    => $filename,
+                'url'         => $url,
+                'cover_url'   => $coverUrl,
                 'category_id' => $request->category_id,
             ]);
 
@@ -76,6 +94,7 @@ class SongController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Listar todas as músicas
