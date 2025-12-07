@@ -15,18 +15,54 @@ class SongController extends Controller
     public function store(Request $request)
     {
         try {
+            // Somente SUPER ADMIN pode fazer upload
+            $user = $request->user();
+            if (!$user || !$user->is_super_admin) {
+                return response()->json([
+                    'error' => 'Acesso negado. Somente o Super Admin pode enviar músicas.'
+                ], 403);
+            }
+
             // Validação
             $request->validate([
                 'title' => 'required|string|max:255',
-                'file'  => 'required|mimes:mp3,wav,ogg,webm,m4a|max:102400', // 100MB
+                'file' => 'required|file|max:102400', // 100MB
                 'category_id' => 'required|exists:categories,id',
                 'anuncio' => 'sometimes|boolean',
+                'company_id' => 'nullable|string|max:24|required_if:anuncio,true',
             ]);
 
             $file = $request->file('file');
 
             if (!$file->isValid()) {
                 return response()->json(['error' => 'Arquivo inválido ou corrompido.'], 422);
+            }
+
+            // Garante que o arquivo contém ao menos um stream de ÁUDIO (independente do MIME informado)
+            $probeCmd = "ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 " . escapeshellarg($file->getRealPath()) . " 2>&1";
+            $probeOut = [];
+            $probeRet = 0;
+            exec($probeCmd, $probeOut, $probeRet);
+            $hasAudioStream = ($probeRet === 0) && !empty($probeOut);
+            if (!$hasAudioStream) {
+                $detectedMime = (string) $file->getMimeType();
+                return response()->json([
+                    'error' => 'Erro de validação',
+                    'details' => [
+                        'file' => ['O arquivo deve conter ao menos um stream de áudio. Tipo detectado: ' . $detectedMime]
+                    ]
+                ], 422);
+            }
+
+            // Evitar duplicados por hash de conteúdo (SHA-256)
+            $fileHash = @hash_file('sha256', $file->getRealPath());
+            if ($fileHash) {
+                $exists = Song::query()->where('file_hash', $fileHash)->exists();
+                if ($exists) {
+                    return response()->json([
+                        'error' => 'Já existe uma música com o mesmo conteúdo (duplicado bloqueado).'
+                    ], 422);
+                }
             }
 
             $tmpPath = $file->getPathname();
@@ -79,6 +115,8 @@ class SongController extends Controller
                 'cover_url'   => $coverUrl,
                 'anuncio'     => $request->boolean('anuncio', false),
                 'category_id' => $request->category_id,
+                'company_id'  => $request->input('company_id'),
+                'file_hash'   => $fileHash,
             ]);
 
             return response()->json([

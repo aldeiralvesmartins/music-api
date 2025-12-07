@@ -11,11 +11,13 @@ class Playlist extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'company_id'];
 
     public function songs()
     {
-        return $this->belongsToMany(Song::class, 'playlist_song', 'playlist_id', 'song_id')->withTimestamps();
+        return $this->belongsToMany(Song::class, 'playlist_song', 'playlist_id', 'song_id')
+            ->withTimestamps()
+            ->withPivot('company_id');
     }
 
     public static function boot()

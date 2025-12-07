@@ -12,7 +12,7 @@ class Song extends Model
     public $incrementing = false; // porque o id é string
 
     protected $keyType = 'string';
-    protected $fillable = ['title', 'filename', 'url', 'cover_url', 'anuncio', 'category_id', 'size_mb', 'duration_seconds'];
+    protected $fillable = ['title', 'filename', 'url', 'cover_url', 'anuncio', 'category_id', 'company_id', 'size_mb', 'duration_seconds', 'file_hash'];
 
     protected $casts = [
         'anuncio' => 'boolean',
@@ -33,6 +33,8 @@ class Song extends Model
 
     public function playlists()
     {
-        return $this->belongsToMany(Playlist::class, 'playlist_song', 'song_id', 'playlist_id')->withTimestamps();
+        return $this->belongsToMany(Playlist::class, 'playlist_song', 'song_id', 'playlist_id')
+            ->withTimestamps()
+            ->withPivot('company_id');
     }
 }

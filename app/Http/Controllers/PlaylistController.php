@@ -19,6 +19,7 @@ class PlaylistController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'company_id' => 'required|string|max:24',
         ]);
 
         $playlist = Playlist::create($data);
@@ -37,6 +38,7 @@ class PlaylistController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'company_id' => 'sometimes|required|string|max:24',
         ]);
         $playlist->update($data);
         return response()->json($playlist);
@@ -56,7 +58,12 @@ class PlaylistController extends Controller
             'song_ids' => 'required|array',
             'song_ids.*' => 'string|exists:songs,id',
         ]);
-        $playlist->songs()->syncWithoutDetaching($data['song_ids']);
+        // montar matriz de attach com company_id no pivot
+        $attachData = [];
+        foreach ($data['song_ids'] as $songId) {
+            $attachData[$songId] = ['company_id' => $playlist->company_id];
+        }
+        $playlist->songs()->syncWithoutDetaching($attachData);
         return response()->json($playlist->load('songs'));
     }
 

@@ -26,6 +26,7 @@ class InitialCompanyAndAdminSeeder extends Seeder
                 'type' => 'admin',
                 'password' => '12345678',
                 'is_admin' => true,
+                'is_super_admin' => true,
                 'email_verified_at' => now(),
                 'company_id' => $company->id,
             ]

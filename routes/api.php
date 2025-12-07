@@ -19,7 +19,9 @@ Route::middleware('handler.exception')->group(function () {
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Company routes (public)
+    Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
     Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+    Route::post('/companies/with-user', [CompanyController::class, 'storeWithUser'])->name('companies.storeWithUser');
 
 
 // Protected routes (require authentication)
