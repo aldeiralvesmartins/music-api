@@ -4,9 +4,19 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Console\Commands\RadioCleanup; // <- adicione esta linha
 
 class Kernel extends ConsoleKernel
 {
+    /**
+     * The Artisan commands provided by your application.
+     *
+     * @var array<int, class-string>
+     */
+    protected $commands = [
+        RadioCleanup::class, // <- registre seu comando aqui
+    ];
+
     protected function schedule(Schedule $schedule): void
     {
         // Limpeza diária de sessões inativas e plays antigos
