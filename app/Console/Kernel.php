@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
      * @var array<int, class-string>
      */
     protected $commands = [
-        RadioCleanup::class, // <- registre seu comando aqui
+        \App\Console\Commands\RadioCleanup::class,
     ];
 
     protected function schedule(Schedule $schedule): void

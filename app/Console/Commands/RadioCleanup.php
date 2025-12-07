@@ -10,23 +10,23 @@ use App\Models\PlayedSong;
 
 class RadioCleanup extends Command
 {
-    // Removido o '=30' e '=7', tratamento do padrão será no handle()
+    // Apenas declare as opções, sem valores
     protected $signature = 'radio:cleanup
         {--days : Number of days to keep played songs}
         {--inactive-days : Number of days to keep radio sessions}';
 
-    protected $description = 'Cleanup old radio sessions and played songs history';
+    protected $description = 'Clean old radio sessions and played songs (TTL)';
 
     public function handle(): int
     {
-        // Aplicando valor padrão caso a opção não seja passada
+        // Valores padrão aplicados aqui
         $days = (int) ($this->option('days') ?? 30);
         $inactiveDays = (int) ($this->option('inactive-days') ?? 7);
 
         $cutPlayed = now()->subDays(max(1, $days));
         $cutSession = now()->subDays(max(1, $inactiveDays));
 
-        DB::transaction(function () use ($cutPlayed, $cutSession) {
+        DB::transaction(function () use ($cutPlayed, $cutSession, &$playedDeleted, &$sessionsDeleted) {
             $playedDeleted = PlayedSong::query()
                 ->where('played_at', '<', $cutPlayed)
                 ->delete();
@@ -37,16 +37,16 @@ class RadioCleanup extends Command
                         ->orWhere('last_saved_at', '<', $cutSession);
                 })
                 ->delete();
-
-            Log::info('radio.cleanup', [
-                'played_deleted' => $playedDeleted,
-                'sessions_deleted' => $sessionsDeleted,
-                'cut_played' => $cutPlayed->toDateTimeString(),
-                'cut_session' => $cutSession->toDateTimeString(),
-            ]);
-
-            $this->info("Deleted $playedDeleted played_songs and $sessionsDeleted radio_sessions");
         });
+
+        Log::info('radio.cleanup', [
+            'played_deleted' => $playedDeleted,
+            'sessions_deleted' => $sessionsDeleted,
+            'cut_played' => $cutPlayed->toDateTimeString(),
+            'cut_session' => $cutSession->toDateTimeString(),
+        ]);
+
+        $this->info("Deleted $playedDeleted played_songs and $sessionsDeleted radio_sessions");
 
         return self::SUCCESS;
     }
