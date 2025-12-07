@@ -11,9 +11,7 @@ use App\Models\PlayedSong;
 class RadioCleanup extends Command
 {
     // Apenas declare as opções, sem valores
-    protected $signature = 'radio:cleanup
-        {--days : Number of days to keep played songs}
-        {--inactive-days : Number of days to keep radio sessions}';
+    protected $signature = 'radio:cleanup-test {--days} {--inactive-days}';
 
     protected $description = 'Clean old radio sessions and played songs (TTL)';
 
