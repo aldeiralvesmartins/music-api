@@ -10,20 +10,23 @@ use App\Models\PlayedSong;
 
 class RadioCleanup extends Command
 {
-    // Apenas declare as opções, sem valores
-    protected $signature = 'radio:cleanup-test {--days} {--inactive-days}';
+    // Comando final, nome limpo
+    protected $signature = 'radio:cleanup
+        {--days=30 : Number of days to keep played songs}
+        {--inactive-days=7 : Number of days to keep radio sessions}';
 
-    protected $description = 'Clean old radio sessions and played songs (TTL)';
+    protected $description = 'Clean old radio sessions and played songs history (TTL)';
 
     public function handle(): int
     {
-        // Valores padrão aplicados aqui
-        $days = (int) ($this->option('days') ?? 30);
-        $inactiveDays = (int) ($this->option('inactive-days') ?? 7);
+        // Pegando opções com fallback para padrão
+        $days = (int) $this->option('days');
+        $inactiveDays = (int) $this->option('inactive-days');
 
         $cutPlayed = now()->subDays(max(1, $days));
         $cutSession = now()->subDays(max(1, $inactiveDays));
 
+        // Deletando em transação
         DB::transaction(function () use ($cutPlayed, $cutSession, &$playedDeleted, &$sessionsDeleted) {
             $playedDeleted = PlayedSong::query()
                 ->where('played_at', '<', $cutPlayed)
@@ -37,6 +40,7 @@ class RadioCleanup extends Command
                 ->delete();
         });
 
+        // Log detalhado
         Log::info('radio.cleanup', [
             'played_deleted' => $playedDeleted,
             'sessions_deleted' => $sessionsDeleted,
