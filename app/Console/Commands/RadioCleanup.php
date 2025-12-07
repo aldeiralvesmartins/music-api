@@ -10,7 +10,6 @@ use App\Models\PlayedSong;
 
 class RadioCleanup extends Command
 {
-    // Comando final, nome limpo
     protected $signature = 'radio:cleanup
         {--days=30 : Number of days to keep played songs}
         {--inactive-days=7 : Number of days to keep radio sessions}';
