@@ -37,4 +37,9 @@ class Song extends Model
             ->withTimestamps()
             ->withPivot('company_id');
     }
+
+    public function playedSongs()
+    {
+        return $this->hasMany(PlayedSong::class, 'song_id');
+    }
 }

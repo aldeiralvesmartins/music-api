@@ -7,7 +7,8 @@ use App\Http\Controllers\{
     CategoryController,
     SongController,
     UserController,
-    PlaylistController};
+    PlaylistController,
+    RadioController};
 use App\Http\Controllers\Admin\AdminController;
 
 
@@ -17,6 +18,14 @@ Route::middleware('handler.exception')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+    // Radio endpoints (public + token/ownership validation in controller). Throttle to prevent abuse.
+    Route::prefix('radio')->middleware('throttle:60,1')->group(function () {
+        Route::get('/session', [RadioController::class, 'session']);
+        Route::post('/save-progress', [RadioController::class, 'saveProgress']);
+        Route::get('/next', [RadioController::class, 'next']);
+        Route::post('/mark-played', [RadioController::class, 'markPlayed']);
+    });
 
 // Company routes (public)
     Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');

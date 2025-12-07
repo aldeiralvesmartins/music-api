@@ -17,7 +17,7 @@ return new class extends Migration
         foreach ($tables as $tableName) {
             if (Schema::hasTable($tableName) && !Schema::hasColumn($tableName, 'company_id')) {
                 Schema::table($tableName, function (Blueprint $table) use ($tableName) {
-                    $table->string('company_id', 24)->nullable()->after('id')->index();
+                    $table->string('company_id', 24)->nullable()->index();
                     $table->foreign('company_id')->references('id')->on('companies')->cascadeOnUpdate()->nullOnDelete();
                 });
             }

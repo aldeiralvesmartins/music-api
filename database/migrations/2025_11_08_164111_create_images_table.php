@@ -12,6 +12,8 @@ return new class extends Migration {
             $table->string('url');
             $table->string('imageable_type');
             $table->string('imageable_id', 24);
+            $table->string('company_id', 24)->nullable()->after('id')->index();
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnUpdate()->nullOnDelete();
         });
     }
 

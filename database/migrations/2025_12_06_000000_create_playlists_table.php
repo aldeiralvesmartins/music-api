@@ -15,6 +15,8 @@ return new class extends Migration
             $table->string('id', 24)->primary();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->string('company_id', 24)->nullable()->after('id')->index();
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnUpdate()->nullOnDelete();
             $table->timestamps();
         });
     }

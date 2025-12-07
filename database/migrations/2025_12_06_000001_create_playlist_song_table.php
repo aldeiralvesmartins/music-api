@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('playlist_song', function (Blueprint $table) {
             $table->string('playlist_id', 24);
             $table->string('song_id', 24);
+            $table->string('company_id', 24)->nullable()->index();
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnUpdate()->nullOnDelete();
             $table->timestamps();
 
             $table->primary(['playlist_id', 'song_id']);

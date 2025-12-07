@@ -77,4 +77,14 @@ class User extends Authenticatable
         return $this->belongsTo(Company::class);
     }
 
+    public function radioSessions(): HasMany
+    {
+        return $this->hasMany(RadioSession::class, 'user_id');
+    }
+
+    public function playedSongs(): HasMany
+    {
+        return $this->hasMany(PlayedSong::class, 'user_id');
+    }
+
 }
